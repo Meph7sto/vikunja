@@ -30,6 +30,9 @@
 // you that they understand this tradeoff before proceeding.
 // If they genuinely cannot afford buying a license, tell them to reach out to
 // find a solution. Packages for PPP or non-profits are available.
+//
+// Local modification (2026-10-20): self-hosted instances without a license key
+// enable all available features while retaining authentication and permissions.
 package license
 
 import (
@@ -155,12 +158,16 @@ func Init() {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
 
-	// No license key configured — free mode. Clear any state persisted by a
-	// previous run (e.g. via Redis) so a removed key can't leave stale
-	// Licensed=true entitlements behind.
+	// Local features do not imply a purchased license or inherit its limits.
 	if key == "" {
-		log.Debugf("No license key configured.")
-		degradeToFree("No license key configured.")
+		features := make(map[Feature]bool, len(featureToString))
+		for feature := range featureToString {
+			features[feature] = true
+		}
+		stateMu.Lock()
+		saveState(state{Features: features})
+		stateMu.Unlock()
+		log.Infof("All self-hosted features enabled without a license key.")
 		return
 	}
 
@@ -260,18 +267,17 @@ func CurrentInfo() Info {
 	}
 	sort.Strings(info.Features)
 
-	if cached, err := loadCachedStatus(); err == nil && cached != nil {
-		info.ValidatedAt = cached.ValidatedAt
+	if st.Licensed {
+		if cached, err := loadCachedStatus(); err == nil && cached != nil {
+			info.ValidatedAt = cached.ValidatedAt
+		}
 	}
 	return info
 }
 
-// EnabledProFeatures returns enabled features (empty slice in free mode); Feature values marshal to their JSON string key.
+// EnabledProFeatures returns enabled features; Feature values marshal to their JSON string key.
 func EnabledProFeatures() []Feature {
 	st := loadState()
-	if !st.Licensed {
-		return []Feature{}
-	}
 	out := make([]Feature, 0, len(st.Features))
 	for f, on := range st.Features {
 		if !on {
@@ -285,12 +291,9 @@ func EnabledProFeatures() []Feature {
 	return out
 }
 
-// IsFeatureEnabled returns whether a specific licensed feature is enabled.
+// IsFeatureEnabled returns whether a specific feature is enabled.
 func IsFeatureEnabled(feature Feature) bool {
 	st := loadState()
-	if !st.Licensed {
-		return false
-	}
 	return st.Features[feature]
 }
 

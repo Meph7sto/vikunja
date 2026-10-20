@@ -61,6 +61,17 @@ Most of this repository is licensed under [AGPL‑3.0‑or‑later](LICENSE).
 The contents of [`desktop/`](desktop/) are licensed under
 [GPL‑3.0‑or‑later](desktop/LICENSE).
 
+### Local Self-Hosted Build
+
+Local modification dated 2026-10-20: leaving `license.key` empty enables the
+admin panel, time tracking, audit logs, and user invitation links without a
+paid license or requests to the license servers. Authentication, administrator
+checks, and project permissions are unchanged. No user is promoted automatically.
+
+To appoint an administrator, run `vikunja user set-admin <username-or-id> --admin`
+with the same configuration and database as the web server. Audit logging still
+requires `audit.enabled: true`; it does not reconstruct past events.
+
 ### Unsplash Images
 
 Background images from Unsplash are distributed under the [Unsplash License](https://unsplash.com/license). The license requires giving credit to the photographer and Unsplash. See [Unsplash’s terms](https://unsplash.com/terms) for more information.
