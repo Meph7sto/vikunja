@@ -95,6 +95,7 @@
 				"defaultView": "默认视图",
 				"timezone": "时区",
 				"overdueTasksRemindersTime": "逾期任务提醒邮件时间",
+				"timeTrackingDefaultStart": "工时记录自动填充起始时间",
 				"filterUsedOnOverview": "概述页面上使用已保存过滤器"
 			},
 			"sections": {
@@ -569,7 +570,10 @@
 		"created": "创建于",
 		"createdBy": "由 {0} 创建",
 		"actions": "行为",
-		"cannotBeUndone": "此操作无法撤消！"
+		"cannotBeUndone": "此操作无法撤消！",
+		"dateRange": "日期范围",
+		"notSet": "未设置",
+		"user": "用户"
 	},
 	"input": {
 		"resetColor": "重置颜色",
@@ -580,7 +584,16 @@
 			"thisWeekend": "本周末",
 			"laterThisWeek": "本周稍后",
 			"nextWeek": "下周",
-			"chooseDate": "选择日期"
+			"nextWeekend": "下周末",
+			"endOfMonth": "本月底",
+			"chooseDate": "选择日期",
+			"quickSelect": "快速选择",
+			"clear": "清除",
+			"noDate": "未设置日期",
+			"previousMonth": "上个月",
+			"nextMonth": "下个月",
+			"month": "月份",
+			"year": "年份"
 		},
 		"editor": {
 			"edit": "编辑",
@@ -635,7 +648,10 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "新建",
-			"selectPlaceholder": "点击或按 Enter 选择"
+			"selectPlaceholder": "点击或按 Enter 选择",
+			"removeItem": "移除此项",
+			"clear": "清除选择",
+			"moreResultsHint": "显示 {total} 个匹配结果中的前 {shown} 个，请缩小搜索范围以查找其余结果。"
 		},
 		"datepickerRange": {
 			"to": "到",
@@ -644,6 +660,7 @@
 			"date": "日期",
 			"ranges": {
 				"today": "今天",
+				"tomorrow": "明天",
 				"thisWeek": "本周",
 				"restOfThisWeek": "本周剩余时间",
 				"nextWeek": "下周",
@@ -752,6 +769,7 @@
 				"text2": "这将删除与此任务相关的所有附件、提醒和关联，无法撤消！"
 			},
 			"actions": {
+				"timeTracking": "记录工时",
 				"assign": "分配给用户",
 				"label": "添加标签",
 				"priority": "设置优先级",
@@ -782,6 +800,7 @@
 			"labels": "标签",
 			"percentDone": "进度",
 			"priority": "优先级",
+			"project": "项目",
 			"relatedTasks": "相关任务",
 			"reminders": "提醒",
 			"repeat": "重复",
@@ -1198,6 +1217,33 @@
 		"version": "版本：{version}",
 		"frontendVersion": "前端版本: {version}",
 		"apiVersion": "API 版本: {version}"
+	},
+	"timeTracking": {
+		"title": "工时记录",
+		"stop": "停止计时",
+		"logTime": "记录工时",
+		"editEntry": "编辑工时记录",
+		"form": {
+			"task": "任务",
+			"taskSearch": "搜索任务…",
+			"commentPlaceholder": "做了哪些工作？",
+			"save": "保存记录",
+			"startTimer": "开始计时",
+			"update": "更新记录",
+			"smartFill": "从上一条记录填充"
+		},
+		"list": {
+			"emptyTask": "此任务暂无工时记录。",
+			"emptyFiltered": "当前筛选条件下没有工时记录。",
+			"total": "总计",
+			"pageTotal": "本页合计",
+			"time": "时段",
+			"duration": "时长"
+		},
+		"browse": {
+			"selectRange": "选择日期范围",
+			"userSearch": "搜索用户…"
+		}
 	},
 	"time": {
 		"units": {

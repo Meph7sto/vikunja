@@ -132,6 +132,7 @@
 				"defaultView": "默認視圖",
 				"timezone": "時區",
 				"overdueTasksRemindersTime": "逾期任務提醒郵件時間",
+				"timeTrackingDefaultStart": "工時紀錄自動填入起始時間",
 				"quickAddDefaultReminders": "快速新增的預設提醒",
 				"quickAddDefaultRemindersDescription": "透過「快速新增魔術」建立且帶有到期日的每個任務，系統都會自動加入這些提醒。",
 				"quickAddDefaultRemindersHint": "請新增一個或多個相對於任務到期日的提醒。若要停用此功能，請保持空白。",
@@ -663,7 +664,9 @@
 		"actions": "操作",
 		"cannotBeUndone": "此操作無法復原！",
 		"avatarOfUser": "{user} 頭像",
-		"dateRange": "日期區間"
+		"dateRange": "日期區間",
+		"notSet": "未設定",
+		"user": "使用者"
 	},
 	"input": {
 		"resetColor": "重置顏色",
@@ -681,7 +684,9 @@
 			"clear": "清除",
 			"noDate": "尚未設定日期",
 			"previousMonth": "上個月",
-			"nextMonth": "下個月"
+			"nextMonth": "下個月",
+			"month": "月份",
+			"year": "年份"
 		},
 		"editor": {
 			"edit": "編輯",
@@ -736,7 +741,10 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "新增",
-			"selectPlaceholder": "點擊或按 Enter 選擇"
+			"selectPlaceholder": "點擊或按 Enter 選擇",
+			"removeItem": "移除此項目",
+			"clear": "清除選擇",
+			"moreResultsHint": "顯示 {total} 個符合結果中的前 {shown} 個，請縮小搜尋範圍以尋找其餘結果。"
 		},
 		"datepickerRange": {
 			"to": "到",
@@ -745,6 +753,7 @@
 			"date": "日期",
 			"ranges": {
 				"today": "今天",
+				"tomorrow": "明天",
 				"thisWeek": "本週",
 				"restOfThisWeek": "本週剩餘時間",
 				"nextWeek": "下週",
@@ -857,6 +866,7 @@
 				"text2": "此操作將一併移除與此任務相關的所有附件、提醒及關聯項目，且無法復原！"
 			},
 			"actions": {
+				"timeTracking": "記錄工時",
 				"assign": "分配給用户",
 				"label": "新增標籤",
 				"priority": "設定優先級",
@@ -888,6 +898,7 @@
 			"labels": "標籤",
 			"percentDone": "進度",
 			"priority": "優先級",
+			"project": "專案",
 			"relatedTasks": "相關任務",
 			"reminders": "提醒",
 			"repeat": "重複",
@@ -1204,6 +1215,33 @@
 		"version": "版本：{version}",
 		"frontendVersion": "前端版本: {version}",
 		"apiVersion": "API 版本: {version}"
+	},
+	"timeTracking": {
+		"title": "工時紀錄",
+		"stop": "停止計時",
+		"logTime": "記錄工時",
+		"editEntry": "編輯工時紀錄",
+		"form": {
+			"task": "任務",
+			"taskSearch": "搜尋任務…",
+			"commentPlaceholder": "做了哪些工作？",
+			"save": "儲存紀錄",
+			"startTimer": "開始計時",
+			"update": "更新紀錄",
+			"smartFill": "從上一筆紀錄填入"
+		},
+		"list": {
+			"emptyTask": "此任務尚無工時紀錄。",
+			"emptyFiltered": "目前篩選條件下沒有工時紀錄。",
+			"total": "總計",
+			"pageTotal": "本頁合計",
+			"time": "時段",
+			"duration": "時長"
+		},
+		"browse": {
+			"selectRange": "選擇日期區間",
+			"userSearch": "搜尋使用者…"
+		}
 	},
 	"time": {
 		"units": {
