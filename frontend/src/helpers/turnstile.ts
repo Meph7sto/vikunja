@@ -4,9 +4,9 @@ export interface TurnstileOptions {
 	sitekey: string
 	action: TurnstileAction
 	theme: 'auto'
-	size: 'flexible' | 'compact'
+	size: 'normal' | 'compact'
 	'response-field': false
-	retry: 'never'
+	retry: 'auto'
 	'refresh-expired': 'manual'
 	'refresh-timeout': 'manual'
 	callback: (token: string) => void
@@ -35,10 +35,12 @@ export function loadTurnstile(): Promise<TurnstileAPI> {
 	if (loading) return loading
 	const promise = new Promise<TurnstileAPI>((resolve, reject) => {
 		let script: HTMLScriptElement | null = null
+		let poll: number | undefined
 		const timeout = window.setTimeout(failed, 15000)
 
 		function cleanup() {
 			window.clearTimeout(timeout)
+			window.clearInterval(poll)
 			script?.removeEventListener('load', loaded)
 			script?.removeEventListener('error', failed)
 		}
@@ -49,18 +51,13 @@ export function loadTurnstile(): Promise<TurnstileAPI> {
 		}
 		function loaded() {
 			const api = window.turnstile
-			if (!api) {
-				failed()
+			if (typeof api?.render !== 'function') {
+				// The load event can precede Turnstile initialization; ready() can throw during that gap.
+				poll ??= window.setInterval(loaded, 50)
 				return
 			}
-			try {
-				api.ready(() => {
-					cleanup()
-					resolve(api)
-				})
-			} catch {
-				failed()
-			}
+			cleanup()
+			resolve(api)
 		}
 
 		if (window.turnstile) {

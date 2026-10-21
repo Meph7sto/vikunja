@@ -58,6 +58,7 @@ let generation = 0
 let mounted = false
 let api: TurnstileAPI | undefined
 let widgetId: string | undefined
+let consecutiveErrors = 0
 let context = captureClientRequestContext()
 
 function removeWidget() {
@@ -77,6 +78,7 @@ async function render() {
 	removeWidget()
 	if (!mounted || !container.value) return
 	state.value = 'loading'
+	consecutiveErrors = 0
 	context = captureClientRequestContext()
 	const request = context
 	const isCurrent = () => mounted && current === generation && isClientRequestContextCurrent(request)
@@ -84,17 +86,19 @@ async function render() {
 		if (!props.siteKey) throw new Error('Missing Turnstile site key')
 		api = await loadTurnstile()
 		if (!isCurrent() || !container.value) return
+		state.value = 'ready'
 		widgetId = api.render(container.value, {
 			sitekey: props.siteKey,
 			action: props.action,
 			theme: 'auto',
-			size: compact.value ? 'compact' : 'flexible',
+			size: compact.value ? 'compact' : 'normal',
 			'response-field': false,
-			retry: 'never',
+			retry: 'auto',
 			'refresh-expired': 'manual',
 			'refresh-timeout': 'manual',
 			callback(value) {
 				if (!isCurrent()) return
+				consecutiveErrors = 0
 				token.value = value
 				state.value = 'verified'
 			},
@@ -106,7 +110,7 @@ async function render() {
 			'error-callback'() {
 				if (isCurrent()) {
 					token.value = ''
-					state.value = 'error'
+					state.value = ++consecutiveErrors > 1 ? 'error' : 'loading'
 				}
 				return true
 			},
@@ -116,7 +120,6 @@ async function render() {
 				state.value = 'expired'
 			},
 		})
-		if (state.value === 'loading') state.value = 'ready'
 	} catch {
 		if (isCurrent()) state.value = 'error'
 	}
@@ -125,6 +128,7 @@ async function render() {
 function reset() {
 	token.value = ''
 	if (!mounted || !isClientRequestContextCurrent(context)) return
+	consecutiveErrors = 0
 	if (widgetId !== undefined && api) {
 		try {
 			state.value = 'ready'

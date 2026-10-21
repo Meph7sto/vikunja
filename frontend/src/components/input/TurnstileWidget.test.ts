@@ -46,8 +46,72 @@ describe('TurnstileWidget', () => {
 		loader.load.mockResolvedValue(api)
 	})
 	afterEach(() => {
+		vi.restoreAllMocks()
 		Reflect.deleteProperty(window, 'turnstile')
 		window.API_URL = ''
+	})
+
+	it('uses a fixed size when the container has no width yet and allows automatic retries', async () => {
+		const wrapper = mountWidget()
+		await flushPromises()
+		expect(renders[0].size).toBe('normal')
+		expect(renders[0].retry).toBe('auto')
+		wrapper.unmount()
+	})
+
+	it('keeps transient errors recoverable and clears any previous token', async () => {
+		const wrapper = mountWidget()
+		await flushPromises()
+		renders[0].callback('old-token')
+		renders[0]['error-callback']()
+		await flushPromises()
+		expect(wrapper.emitted('update:modelValue')?.slice(-1)).toEqual([['']])
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		expect(wrapper.find('.challenge').attributes('aria-busy')).toBe('true')
+		renders[0].callback('retried-token')
+		await flushPromises()
+		expect(wrapper.emitted('update:modelValue')?.slice(-1)).toEqual([['retried-token']])
+		expect(wrapper.find('.challenge').attributes('aria-busy')).toBe('false')
+		renders[0]['error-callback']()
+		await flushPromises()
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		wrapper.unmount()
+	})
+
+	it('offers a manual retry after repeated errors and rearms the initial retry', async () => {
+		const wrapper = mountWidget()
+		await flushPromises()
+		renders[0]['error-callback']()
+		renders[0]['error-callback']()
+		await flushPromises()
+		expect(wrapper.find('[role="alert"]').text()).toBe(i18n.global.t('user.auth.verificationUnavailable'))
+		await wrapper.find('x-button-stub').trigger('click')
+		expect(api.reset).toHaveBeenCalledWith('widget-1')
+		renders[0]['error-callback']()
+		await flushPromises()
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		wrapper.unmount()
+	})
+
+	it('preserves a loading state when render synchronously reports its first error', async () => {
+		vi.mocked(api.render).mockImplementation((_container, options) => {
+			options['error-callback']()
+			return 'widget-1'
+		})
+		const wrapper = mountWidget()
+		await flushPromises()
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		expect(wrapper.find('.challenge').attributes('aria-busy')).toBe('true')
+		wrapper.unmount()
+	})
+
+	it('retains compact sizing for narrow visible containers', async () => {
+		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 250, 150))
+		const wrapper = mountWidget()
+		await flushPromises()
+		expect(renders).toHaveLength(1)
+		expect(renders[0].size).toBe('compact')
+		wrapper.unmount()
 	})
 
 	it('sets the fixed action and clears the token on expiry and error', async () => {
