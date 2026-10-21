@@ -91,11 +91,20 @@
 				</p>
 			</div>
 
+			<TurnstileWidget
+				v-if="configStore.turnstile.enabled"
+				:key="configStore.turnstileRevision"
+				ref="turnstileWidget"
+				v-model="turnstileToken"
+				:site-key="configStore.turnstile.site_key"
+				action="register"
+			/>
+
 			<XButton
 				id="register-submit"
 				:loading="isLoading"
 				class="mie-2"
-				:disabled="!everythingValid"
+				:aria-disabled="!everythingValid || !challengeReady || isSubmitting"
 				@click="submit"
 			>
 				{{ $t('user.auth.createAccount') }}
@@ -143,6 +152,10 @@ import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
 import {parseValidationErrors, type ValidationError} from '@/helpers/parseValidationErrors'
+import TurnstileWidget from '@/components/input/TurnstileWidget.vue'
+import {useTurnstileChallenge} from '@/composables/useTurnstileChallenge'
+import {isRequestContextAbort} from '@/client/requestContext'
+import {getErrorText} from '@/message'
 
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
@@ -177,6 +190,12 @@ onUnmounted(() => {
 const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const {
+	token: turnstileToken,
+	widget: turnstileWidget,
+	canSubmit: challengeReady,
+	prepareSubmission,
+} = useTurnstileChallenge()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
 // FIXME: use the `beforeEnter` hook of vue-router
@@ -193,7 +212,8 @@ const credentials = reactive({
 	password: '',
 })
 
-const isLoading = computed(() => authStore.isLoading)
+const isSubmitting = ref(false)
+const isLoading = computed(() => isSubmitting.value || authStore.isLoading)
 const errorMessage = ref('')
 const confirmEmailMessage = ref('')
 const validatePasswordInitially = ref(false)
@@ -281,6 +301,7 @@ function isApiValidationError(error: unknown): error is ValidationError {
 }
 
 async function submit() {
+	if (isLoading.value) return
 	errorMessage.value = ''
 	serverValidationErrors.value = {}
 	validatePasswordInitially.value = true
@@ -288,15 +309,26 @@ async function submit() {
 	if (!everythingValid.value || (isInvite.value && inviteState.value.status !== 'ready')) {
 		return
 	}
+	const challenge = prepareSubmission()
+	if (!challenge) {
+		errorMessage.value = t('error.20001')
+		return
+	}
+	isSubmitting.value = true
 
 	try {
+		const body = {
+			...toRaw(credentials),
+			...(challenge.token ? {turnstile_token: challenge.token} : {}),
+		}
 		if (isInvite.value) {
-			await authStore.registerWithInvite(toRaw(credentials))
+			await authStore.registerWithInvite(body)
 		} else {
-			await authStore.register(toRaw(credentials))
+			await authStore.register(body)
 		}
 		redirectIfSaved()
 	} catch (e: unknown) {
+		if (isRequestContextAbort(e)) return
 		if (isInvite.value && e instanceof Object && 'code' in e && e.code === 2005) {
 			inviteState.value = {status: 'invalid'}
 			return
@@ -318,12 +350,12 @@ async function submit() {
 				// Fallback to general error message if no field errors
 				errorMessage.value = t('user.auth.registrationFailed')
 			}
-		} else if (e instanceof Object && 'message' in e && typeof e.message === 'string') {
-			// Non-validation backend errors (e.g. duplicate username) - show their message
-			errorMessage.value = e.message
 		} else {
-			errorMessage.value = t('user.auth.registrationFailed')
+			errorMessage.value = getErrorText(e) || t('user.auth.registrationFailed')
 		}
+	} finally {
+		challenge.reset()
+		isSubmitting.value = false
 	}
 }
 </script>

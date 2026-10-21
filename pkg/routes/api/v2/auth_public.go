@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/turnstile"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
@@ -37,7 +38,17 @@ var publicSecurity = []map[string][]string{}
 
 type registerUserRequest struct {
 	shared.UserRegister
-	InviteToken *string `json:"invite_token,omitempty" doc:"Invitation token. Allows registration when public signup is disabled and joins the invited teams."`
+	InviteToken    *string `json:"invite_token,omitempty" doc:"Invitation token. Allows registration when public signup is disabled and joins the invited teams."`
+	TurnstileToken string  `json:"turnstile_token,omitempty" maxLength:"2048" doc:"Single-use Turnstile token for the register action. Required when Turnstile is enabled."`
+}
+
+type passwordTokenRequest struct {
+	user.PasswordTokenRequest
+	TurnstileToken string `json:"turnstile_token,omitempty" maxLength:"2048" doc:"Single-use Turnstile token for the password_reset action. Required when Turnstile is enabled."`
+}
+
+type publicAuthHandlers struct {
+	turnstile *turnstile.Verifier
 }
 
 type registerUserBody struct {
@@ -84,27 +95,28 @@ func RegisterPublicAuthRoutes(api huma.API) {
 
 func registerLocalAuthRoutes(api huma.API) {
 	authTags := []string{"auth"}
+	handlers := publicAuthHandlers{turnstile: turnstile.NewVerifier(nil)}
 
 	Register(api, huma.Operation{
 		OperationID: "auth-register",
 		Summary:     "Register",
-		Description: "Creates a local account. An invite_token allows signup when public registration is disabled and joins the invited teams atomically.",
+		Description: "Creates a local account. An invite_token allows signup when public registration is disabled and joins the invited teams atomically. When Turnstile is enabled, requires a token for the register action (400 if invalid, 503 if verification is unavailable).",
 		Method:      http.MethodPost,
 		Path:        "/register",
 		Tags:        authTags,
 		Security:    publicSecurity,
-	}, authRegister)
+	}, handlers.authRegister)
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-password-token",
 		Summary:       "Request a password reset token",
-		Description:   "Requests a token to reset the password for the account with the given email. The token is sent to that email. Returns 404 if no account uses the given email.",
+		Description:   "Requests a token to reset the password for the account with the given email. The token is sent to that email. Returns 404 if no account uses the given email. When Turnstile is enabled, requires a token for the password_reset action (400 if invalid, 503 if verification is unavailable).",
 		Method:        http.MethodPost,
 		Path:          "/user/password/token",
 		DefaultStatus: http.StatusOK,
 		Tags:          authTags,
 		Security:      publicSecurity,
-	}, authRequestPasswordToken)
+	}, handlers.authRequestPasswordToken)
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-password-reset",
@@ -129,7 +141,13 @@ func registerLocalAuthRoutes(api huma.API) {
 	}, authConfirmEmail)
 }
 
-func authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (*registerUserBody, error) {
+func (h *publicAuthHandlers) authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (*registerUserBody, error) {
+	if in.Body.InviteToken == nil && !config.ServiceEnableRegistration.GetBool() {
+		return nil, huma.Error404NotFound("Not Found")
+	}
+	if err := h.turnstile.Verify(ctx, in.Body.TurnstileToken, turnstile.ActionRegister); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if in.Body.InviteToken != nil {
 		s := db.NewSession()
 		defer s.Close()
@@ -144,9 +162,6 @@ func authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (
 		}
 		return &registerUserBody{Body: created}, nil
 	}
-	if !config.ServiceEnableRegistration.GetBool() {
-		return nil, huma.Error404NotFound("Not Found")
-	}
 	newUser, err := shared.RegisterUser(ctx, &in.Body.UserRegister)
 	if err != nil {
 		return nil, translateDomainError(err)
@@ -154,8 +169,11 @@ func authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (
 	return &registerUserBody{Body: newUser}, nil
 }
 
-func authRequestPasswordToken(_ context.Context, in *struct{ Body user.PasswordTokenRequest }) (*messageBody, error) {
-	if err := shared.RequestPasswordResetToken(&in.Body); err != nil {
+func (h *publicAuthHandlers) authRequestPasswordToken(ctx context.Context, in *struct{ Body passwordTokenRequest }) (*messageBody, error) {
+	if err := h.turnstile.Verify(ctx, in.Body.TurnstileToken, turnstile.ActionPasswordReset); err != nil {
+		return nil, translateDomainError(err)
+	}
+	if err := shared.RequestPasswordResetToken(&in.Body.PasswordTokenRequest); err != nil {
 		return nil, translateDomainError(err)
 	}
 	out := &messageBody{}

@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/turnstile"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/labstack/echo/v5"
@@ -40,9 +41,13 @@ type UserRegister = shared.UserRegister
 // @Param credentials body v1.UserRegister true "The user with credentials to create"
 // @Success 200 {object} user.User
 // @Failure 400 {object} web.HTTPError "No or invalid user register object provided / User already exists."
+// @Failure 403 {object} web.HTTPError "Turnstile is enabled. Use API v2."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]
 func RegisterUser(c *echo.Context) error {
+	if config.TurnstileEnabled.GetBool() {
+		return turnstile.ErrV2Required
+	}
 	if !config.ServiceEnableRegistration.GetBool() {
 		return echo.ErrNotFound
 	}

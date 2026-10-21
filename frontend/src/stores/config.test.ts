@@ -47,6 +47,24 @@ describe('config store', () => {
 			window.API_URL = 'https://example.test'
 		})
 
+		it('resets Turnstile to disabled when switching to an older server with no field', () => {
+			const store = useConfigStore()
+			store.setConfig({
+				version: 'new',
+				turnstile: {
+					enabled: true,
+					site_key: 'first-site-key',
+				},
+			})
+			const revision = store.turnstileRevision
+			store.setConfig({version: 'old'})
+			expect(store.turnstile).toEqual({
+				enabled: false,
+				site_key: '',
+			})
+			expect(store.turnstileRevision).toBeGreaterThan(revision)
+		})
+
 		it('keeps wire fields', async () => {
 			sdk.info.mockResolvedValue({
 				data: {

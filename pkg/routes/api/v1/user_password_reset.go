@@ -19,7 +19,9 @@ package v1
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/turnstile"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
@@ -64,9 +66,13 @@ func UserResetPassword(c *echo.Context) error {
 // @Param credentials body user.PasswordTokenRequest true "The username of the user to request a token for."
 // @Success 200 {object} models.Message
 // @Failure 404 {object} web.HTTPError "The user does not exist."
+// @Failure 403 {object} web.HTTPError "Turnstile is enabled. Use API v2."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/password/token [post]
 func UserRequestResetPasswordToken(c *echo.Context) error {
+	if config.TurnstileEnabled.GetBool() {
+		return turnstile.ErrV2Required
+	}
 	// Check for Request Content
 	var pwTokenReset user.PasswordTokenRequest
 	if err := c.Bind(&pwTokenReset); err != nil {

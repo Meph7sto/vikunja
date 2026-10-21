@@ -3,6 +3,7 @@ import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {setupApiUrl} from '../../support/authenticateUser'
 import {apiRootUrl} from '../../support/apiUrl'
+import {mockTurnstileWidget} from '../../support/turnstile'
 
 test.describe('Registration', () => {
 	test.beforeEach(async ({page}) => {
@@ -15,6 +16,10 @@ test.describe('Registration', () => {
 	})
 
 	test('Should work without issues', async ({page}) => {
+		const cloudflareRequests: string[] = []
+		page.on('request', request => {
+			if (request.url().startsWith('https://challenges.cloudflare.com/')) cloudflareRequests.push(request.url())
+		})
 		const fixture = {
 			username: 'testuser',
 			password: '12345678',
@@ -30,6 +35,66 @@ test.describe('Registration', () => {
 		await page.locator('#register-submit').click()
 		await expect(page).toHaveURL('/')
 		await expect(page.locator('main h1')).toContainText(fixture.username)
+		expect(cloudflareRequests).toEqual([])
+	})
+
+	test('Turnstile UI retries with a new token and registration persists (mock widget)', async ({page, apiContext}, testInfo) => {
+		await mockTurnstileWidget(page)
+		const submittedTokens: string[] = []
+		page.on('request', request => {
+			if (request.url().endsWith('/api/v2/register') && request.method() === 'POST') {
+				submittedTokens.push(request.postDataJSON().turnstile_token)
+			}
+		})
+		await page.setViewportSize({
+			width: 320,
+			height: 760,
+		})
+		await page.goto('/register')
+		await expect(page.locator('.vikunja-loading')).toHaveCount(0)
+		await page.locator('#username').fill('test')
+		await page.locator('#email').fill('turnstile@example.com')
+		await page.locator('#password').fill('12345678')
+		const verify = page.locator('[data-turnstile-verify="register"]')
+		await expect(verify).toBeVisible()
+		await expect(page.locator('#register-submit')).toHaveAttribute('aria-disabled', 'true')
+		await page.locator('#password').press('Enter')
+		expect(submittedTokens).toEqual([])
+		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+		await page.screenshot({path: testInfo.outputPath('turnstile-register-mobile.png'), fullPage: true})
+		await verify.click()
+		await page.locator('#register-submit').click()
+		await expect(page.locator('div.message.danger')).toContainText('A user with this username already exists.')
+		await expect(page.locator('#register-submit')).toHaveAttribute('aria-disabled', 'true')
+		await expect(page.locator('#email')).toHaveValue('turnstile@example.com')
+		await page.locator('#username').fill('turnstile-user')
+		await page.locator('#password').press('Enter')
+		expect(submittedTokens).toHaveLength(1)
+		await page.setViewportSize({
+			width: 1280,
+			height: 900,
+		})
+		await expect(verify).toBeVisible()
+		await page.screenshot({path: testInfo.outputPath('turnstile-register-desktop.png'), fullPage: true})
+		await verify.click()
+		await page.locator('#register-submit').click()
+		await expect(page).toHaveURL('/')
+		expect(submittedTokens).toHaveLength(2)
+		expect(submittedTokens[0]).not.toBe(submittedTokens[1])
+		await page.reload()
+		await expect(page.locator('main h1')).toContainText('turnstile-user')
+		const login = await apiContext.post('login', {
+			data: {
+				username: 'turnstile-user',
+				password: '12345678',
+			},
+		})
+		expect(login.ok()).toBe(true)
+		const storage = await page.evaluate(() => JSON.stringify({
+			local: {...localStorage},
+			session: {...sessionStorage},
+		}))
+		expect(storage).not.toContain('mock-turnstile-token-')
 	})
 
 	test('Should show a confirmation notice when the email needs to be verified', async ({browser, baseURL, request}) => {

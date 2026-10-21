@@ -162,6 +162,11 @@ const (
 	RateLimitTokenRefreshLimit Key = `ratelimit.tokenrefreshlimit`
 	RateLimitBasicAuthLimit    Key = `ratelimit.basicauthlimit`
 
+	TurnstileEnabled          Key = `turnstile.enabled`
+	TurnstileSiteKey          Key = `turnstile.sitekey`
+	TurnstileSecretKey        Key = `turnstile.secretkey`
+	TurnstileAllowedHostnames Key = `turnstile.allowedhostnames`
+
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
 	FilesType     Key = `files.type`
@@ -479,6 +484,11 @@ func initDefaultConfig() {
 	RateLimitNoAuthRoutesLimit.setDefault(10)
 	RateLimitTokenRefreshLimit.setDefault(60)
 	RateLimitBasicAuthLimit.setDefault(10)
+
+	TurnstileEnabled.setDefault(false)
+	TurnstileSiteKey.setDefault("")
+	TurnstileSecretKey.setDefault("")
+	TurnstileAllowedHostnames.setDefault([]string{})
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
@@ -809,6 +819,10 @@ func InitConfig() {
 		if parsed.Scheme != "http" && parsed.Scheme != "https" {
 			log.Fatalf("service.publicurl must include http:// or https:// scheme, got: %s", ServicePublicURL.GetString())
 		}
+	}
+
+	if err := validateTurnstileConfig(); err != nil {
+		log.Fatalf("Invalid Turnstile configuration: %s", err)
 	}
 
 	if MigrationTodoistRedirectURL.GetString() == "" {

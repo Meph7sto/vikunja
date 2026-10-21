@@ -1449,6 +1449,10 @@ export type PasswordTokenRequest = {
      */
     readonly $schema?: string;
     email?: string;
+    /**
+     * Single-use Turnstile token for the password_reset action. Required when Turnstile is enabled.
+     */
+    turnstile_token?: string;
 };
 
 export type PreviewResult = {
@@ -1875,6 +1879,10 @@ export type RegisterUserRequest = {
      */
     language?: string;
     password?: string;
+    /**
+     * Single-use Turnstile token for the register action. Required when Turnstile is enabled.
+     */
+    turnstile_token?: string;
     username?: string;
 };
 
@@ -2996,6 +3004,17 @@ export type TotpEnableBodyBody = {
     passcode?: string;
 };
 
+export type TurnstileInfo = {
+    /**
+     * Whether the protected endpoints require a Turnstile token.
+     */
+    enabled?: boolean;
+    /**
+     * Public widget site key. Empty when Turnstile is disabled.
+     */
+    site_key?: string;
+};
+
 export type User = {
     /**
      * A URL to the JSON Schema for this object.
@@ -3463,6 +3482,10 @@ export type VikunjaInfos = {
      * Whether TOTP two-factor authentication is enabled.
      */
     totp_enabled?: boolean;
+    /**
+     * Human verification required for public registration and password reset email requests.
+     */
+    turnstile?: TurnstileInfo;
     /**
      * Whether users may delete their own account.
      */
@@ -4200,6 +4223,10 @@ export type PasswordResetWritable = {
 
 export type PasswordTokenRequestWritable = {
     email?: string;
+    /**
+     * Single-use Turnstile token for the password_reset action. Required when Turnstile is enabled.
+     */
+    turnstile_token?: string;
 };
 
 export type PreviewResultWritable = {
@@ -4408,6 +4435,10 @@ export type RegisterUserRequestWritable = {
      */
     language?: string;
     password?: string;
+    /**
+     * Single-use Turnstile token for the register action. Required when Turnstile is enabled.
+     */
+    turnstile_token?: string;
     username?: string;
 };
 
@@ -5046,6 +5077,10 @@ export type VikunjaInfosWritable = {
      * Whether TOTP two-factor authentication is enabled.
      */
     totp_enabled?: boolean;
+    /**
+     * Human verification required for public registration and password reset email requests.
+     */
+    turnstile?: TurnstileInfo;
     /**
      * Whether users may delete their own account.
      */

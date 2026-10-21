@@ -20,13 +20,25 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 type infoBody struct {
-	Body shared.VikunjaInfos
+	Body VikunjaInfos
+}
+
+// VikunjaInfos extends only the v2 wire format; v1 keeps shared.VikunjaInfos.
+type VikunjaInfos struct {
+	shared.VikunjaInfos
+	Turnstile TurnstileInfo `json:"turnstile" doc:"Human verification required for public registration and password reset email requests."`
+}
+
+type TurnstileInfo struct {
+	Enabled bool   `json:"enabled" doc:"Whether the protected endpoints require a Turnstile token."`
+	SiteKey string `json:"site_key" doc:"Public widget site key. Empty when Turnstile is disabled."`
 }
 
 // RegisterInfoRoutes wires the public instance-info endpoint onto the Huma API.
@@ -47,5 +59,12 @@ func RegisterInfoRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterInfoRoutes) }
 
 func info(_ context.Context, _ *struct{}) (*infoBody, error) {
-	return &infoBody{Body: shared.BuildInfo()}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	turnstile := TurnstileInfo{Enabled: config.TurnstileEnabled.GetBool()}
+	if turnstile.Enabled {
+		turnstile.SiteKey = config.TurnstileSiteKey.GetString()
+	}
+	return &infoBody{Body: VikunjaInfos{
+		VikunjaInfos: shared.BuildInfo(), //nolint:contextcheck // OIDC provider lifetime exceeds this request.
+		Turnstile:    turnstile,
+	}}, nil
 }

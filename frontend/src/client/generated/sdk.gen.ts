@@ -2247,7 +2247,7 @@ export const webhooksUpdate = <ThrowOnError extends boolean = true>(options: Opt
 /**
  * Register
  *
- * Creates a local account. An invite_token allows signup when public registration is disabled and joins the invited teams atomically.
+ * Creates a local account. An invite_token allows signup when public registration is disabled and joins the invited teams atomically. When Turnstile is enabled, requires a token for the register action (400 if invalid, 503 if verification is unavailable).
  */
 export const authRegister = <ThrowOnError extends boolean = true>(options: Options<AuthRegisterData, ThrowOnError>): RequestResult<AuthRegisterResponses, AuthRegisterErrors, ThrowOnError> => (options.client ?? client).post<AuthRegisterResponses, AuthRegisterErrors, ThrowOnError>({
     url: '/register',
@@ -3735,7 +3735,7 @@ export const authPasswordReset = <ThrowOnError extends boolean = true>(options: 
 /**
  * Request a password reset token
  *
- * Requests a token to reset the password for the account with the given email. The token is sent to that email. Returns 404 if no account uses the given email.
+ * Requests a token to reset the password for the account with the given email. The token is sent to that email. Returns 404 if no account uses the given email. When Turnstile is enabled, requires a token for the password_reset action (400 if invalid, 503 if verification is unavailable).
  */
 export const authPasswordToken = <ThrowOnError extends boolean = true>(options: Options<AuthPasswordTokenData, ThrowOnError>): RequestResult<AuthPasswordTokenResponses, AuthPasswordTokenErrors, ThrowOnError> => (options.client ?? client).post<AuthPasswordTokenResponses, AuthPasswordTokenErrors, ThrowOnError>({
     url: '/user/password/token',

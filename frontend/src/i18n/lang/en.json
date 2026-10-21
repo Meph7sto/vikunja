@@ -109,7 +109,9 @@
       "registrationConfirmEmail": "Your account was created successfully! Please check your inbox and click the link in the confirmation email before logging in.",
       "inviteInvalid": "This invite link is invalid or expired.",
       "inviteLoadFailed": "Could not load this invitation. Please try again.",
-      "inviteTeams": "You will join: {teams}"
+      "inviteTeams": "You will join: {teams}",
+      "verificationExpired": "Verification expired. Please try again.",
+      "verificationUnavailable": "Could not load human verification. Please try again."
     },
     "settings": {
       "bots": {
@@ -1672,7 +1674,10 @@
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
-    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance.",
+    "20001": "Human verification failed. Please try again.",
+    "20002": "Human verification is temporarily unavailable. Please try again later.",
+    "20003": "Human verification is required. Update your client to use API v2."
   },
   "about": {
     "title": "About",

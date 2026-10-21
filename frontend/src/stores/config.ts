@@ -1,4 +1,4 @@
-import {computed, reactive, toRefs} from 'vue'
+import {computed, reactive, ref, toRefs} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {getApiBaseUrl, getApiRootUrl, InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
@@ -12,8 +12,9 @@ import type {IProvider} from '@/types/IProvider'
 import type {ProFeature} from '@/constants/proFeatures'
 
 export type ConfigState = Required<Omit<VikunjaInfos,
-	'$schema' | 'auth' | 'legal' | 'available_migrators' | 'enabled_background_providers' | 'enabled_pro_features'
+	'$schema' | 'auth' | 'legal' | 'available_migrators' | 'enabled_background_providers' | 'enabled_pro_features' | 'turnstile'
 >> & {
+	turnstile: Required<NonNullable<VikunjaInfos['turnstile']>>
 	available_migrators: string[]
 	enabled_background_providers: string[]
 	enabled_pro_features: string[]
@@ -49,6 +50,10 @@ export function navigableUrl(url: string | undefined): string {
 function defaultConfig(): ConfigState {
 	return {
 		version: '',
+		turnstile: {
+			enabled: false,
+			site_key: '',
+		},
 		email_reminders_enabled: true,
 		frontend_url: '',
 		motd: '',
@@ -90,6 +95,7 @@ function defaultConfig(): ConfigState {
 
 export const useConfigStore = defineStore('config', () => {
 	const state: ConfigState = reactive(defaultConfig())
+	const turnstileRevision = ref(0)
 
 	const migratorsEnabled = computed(() => state.available_migrators?.length > 0)
 	const apiBase = computed(() => new URL(`${getApiRootUrl()}/`, window.location.origin).href.replace(/\/$/, ''))
@@ -100,6 +106,10 @@ export const useConfigStore = defineStore('config', () => {
 		const defaults = defaultConfig()
 
 		Object.assign(state, wire, {
+			turnstile: {
+				enabled: config.turnstile?.enabled ?? false,
+				site_key: config.turnstile?.site_key ?? '',
+			},
 			available_migrators: config.available_migrators ?? [],
 			enabled_background_providers: config.enabled_background_providers ?? [],
 			enabled_pro_features: config.enabled_pro_features ?? [],
@@ -124,6 +134,7 @@ export const useConfigStore = defineStore('config', () => {
 				},
 			},
 		})
+		turnstileRevision.value++
 	}
 
 	function isProFeatureEnabled(name: ProFeature): boolean {
@@ -158,6 +169,7 @@ export const useConfigStore = defineStore('config', () => {
 
 	return {
 		...toRefs(state),
+		turnstileRevision,
 
 		migratorsEnabled,
 		apiBase,

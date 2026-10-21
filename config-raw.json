@@ -453,6 +453,32 @@
             ]
         },
         {
+            "key": "turnstile",
+            "comment": "Cloudflare Turnstile protects public local registration (including invitations) and password reset email requests. Disabled by default. Restart Vikunja after changing these settings.",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Require Turnstile on the protected API v2 endpoints and reject their API v1 counterparts."
+                },
+                {
+                    "key": "sitekey",
+                    "default_value": "",
+                    "comment": "Public widget site key. Required when enabled and exposed through API v2 instance info."
+                },
+                {
+                    "key": "secretkey",
+                    "default_value": "",
+                    "comment": "Server-side Siteverify secret key. Required when enabled. Never expose this key to the frontend."
+                },
+                {
+                    "key": "allowedhostnames",
+                    "default_value": "[]",
+                    "comment": "Exact browser hostnames allowed to solve challenges, without schemes, ports, paths or wildcards. Defaults to the hostname of service.publicurl. For a separately hosted frontend, list its hostname here. The environment variable accepts space-separated hostnames."
+                }
+            ]
+        },
+        {
             "key": "ratelimit",
             "children": [
                 {

@@ -1,4 +1,3 @@
-import {useMutation} from '@tanstack/vue-query'
 import {
 	authPasswordReset,
 	authPasswordToken,
@@ -21,7 +20,7 @@ export function useResetPasswordMutation() {
 }
 
 export function useRequestPasswordResetMutation() {
-	return useMutation(contextMutationOptions({
+	return useSecretMutation(contextMutationOptions({
 		mutationFn: async (body: PasswordTokenRequestWritable) => (await authPasswordToken({body})).data,
 		toastError: () => false,
 	}))
