@@ -385,9 +385,7 @@ func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User,
 		uu.Username = petname.Generate(3, "-")
 	}
 
-	// And create their project
-	err = models.CreateNewProjectForUser(s, u)
-	return
+	return u, nil
 }
 
 // RefreshResult holds the result of a successful session refresh.

@@ -28,6 +28,15 @@
 				<div class="head">
 					<span>{{ $t('notification.title') }}</span>
 					<div class="actions">
+						<RouterLink
+							v-tooltip="$t('notification.openInbox')"
+							class="action-link"
+							:to="{name: 'notifications.index'}"
+							:aria-label="$t('notification.openInbox')"
+							@click="showNotifications = false"
+						>
+							<Icon icon="inbox" />
+						</RouterLink>
 						<BaseButton
 							v-if="notifications.length > 0"
 							v-tooltip="$t('notification.clearAll')"
@@ -117,58 +126,26 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {onMounted, onUnmounted, ref} from 'vue'
 import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
-import {useInfiniteQuery} from '@tanstack/vue-query'
 import {
-	notificationsQuery,
 	useMarkNotificationReadMutation,
 	useMarkAllNotificationsReadMutation,
 	useClearNotificationsMutation,
 } from '@/client/queries/notifications'
-import {notificationDoer, notificationRoute, notificationText} from '@/helpers/notification'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
-import {getDisplayName} from '@/helpers/user'
-import {useAuthStore} from '@/stores/auth'
-import {useWebSocket} from '@/composables/useWebSocket'
+import {useNotifications, type NotificationRow} from '@/composables/useNotifications'
 import XButton from '@/components/input/Button.vue'
 
-const {authenticated, isAwaitingFirstConnection} = useWebSocket()
-const authStore = useAuthStore()
 const router = useRouter()
-const inbox = useInfiniteQuery(computed(() => ({
-	...notificationsQuery(),
-	// A fetch before the socket subscribes would be refetched by the subscribe sweep.
-	enabled: !isAwaitingFirstConnection(),
-	refetchInterval: authenticated.value ? false : 10_000,
-})))
+const {query: inbox, notifications, unreadCount: unreadNotifications} = useNotifications(true)
 const readMutation = useMarkNotificationReadMutation()
 const readAllMutation = useMarkAllNotificationsReadMutation()
 const clearMutation = useClearNotificationsMutation()
-// A notification arriving between page loads shifts the offsets and repeats a row on the next page.
-const loadedNotifications = computed(() => [...new Map((inbox.data.value?.pages ?? [])
-	.flatMap(page => page.items)
-	.map(n => [n.id, n] as const)).values()])
-const notifications = computed(() => loadedNotifications.value.flatMap(n => {
-	if (!n.name || !n.id) return []
-	const doer = notificationDoer(n)
-	return [{
-		id: n.id,
-		created: n.created,
-		doer,
-		doerName: getDisplayName(doer),
-		text: notificationText(n, authStore.info),
-		route: notificationRoute(n),
-		read: parseDateOrNull(n.read_at) !== null,
-	}]
-}))
-type NotificationRow = typeof notifications.value[number]
-const unreadNotifications = computed(() => notifications.value.filter(n => !n.read).length)
 const showNotifications = ref(false)
 const popup = ref<HTMLElement | null>(null)
 

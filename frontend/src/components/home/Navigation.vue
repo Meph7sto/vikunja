@@ -31,6 +31,14 @@
 					</RouterLink>
 				</li>
 				<li>
+					<RouterLink :to="{name: 'notifications.index'}">
+						<span class="menu-item-icon icon">
+							<Icon icon="inbox" />
+						</span>
+						{{ $t('project.inboxTitle') }}
+					</RouterLink>
+				</li>
+				<li>
 					<RouterLink
 						v-shortcut="SHORTCUTS.navigation.upcoming"
 						:to="{ name: 'tasks.range'}"

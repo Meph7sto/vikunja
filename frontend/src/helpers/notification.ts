@@ -2,6 +2,7 @@ import type {DatabaseNotification, User, Task, Project, Team} from '@/client/gen
 import type {RouteLocationRaw} from 'vue-router'
 import {getDisplayName} from '@/helpers/user'
 import {getTaskIdentifier} from '@/helpers/task'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
 
 export const NOTIFICATION_NAMES = {
 	'TASK_COMMENT': 'task.comment',
@@ -66,6 +67,20 @@ export function notificationText(n: DatabaseNotification, user: Pick<User, 'id'>
 	return ''
 }
 
+export function notificationSubject(n: DatabaseNotification): string {
+	const payload = record(n.notification)
+	const task = record(payload.task)
+	if (typeof task.title === 'string') {
+		return `${getTaskIdentifier(task as Task)} ${task.title}`
+	}
+	const project = record(payload.project)
+	if (typeof project.title === 'string' && typeof project.id === 'number') {
+		return getProjectTitle(project as Required<Pick<Project, 'id' | 'title'>>)
+	}
+	const team = record(payload.team)
+	return typeof team.name === 'string' ? team.name : ''
+}
+
 export function notificationRoute(n: DatabaseNotification): RouteLocationRaw | null {
 	const payload = record(n.notification)
 	const taskNames = [
@@ -81,7 +96,7 @@ export function notificationRoute(n: DatabaseNotification): RouteLocationRaw | n
 	}
 	if (n.name === NOTIFICATION_NAMES.PROJECT_CREATED) {
 		const projectId = record(payload.project).id
-		return typeof projectId === 'number' && projectId > 0 ? {name: 'task.index', params: {projectId}} : null
+		return typeof projectId === 'number' && projectId > 0 ? {name: 'project.index', params: {projectId}} : null
 	}
 	if (n.name === NOTIFICATION_NAMES.TEAM_MEMBER_ADDED) {
 		const id = record(payload.team).id

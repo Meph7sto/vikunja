@@ -281,16 +281,10 @@ var userCreateCmd = &cobra.Command{
 			log.Fatalf("Provided email is invalid.")
 		}
 
-		newUser, err := user.CreateUser(s, u)
+		_, err := user.CreateUser(s, u)
 		if err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Error creating new user: %s", err)
-		}
-
-		err = models.CreateNewProjectForUser(s, newUser)
-		if err != nil {
-			_ = s.Rollback()
-			log.Fatalf("Error creating new project for user: %s", err)
 		}
 
 		if err := s.Commit(); err != nil {

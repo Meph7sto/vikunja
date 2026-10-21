@@ -4,6 +4,7 @@ import {
 	NOTIFICATION_NAMES,
 	notificationDoer,
 	notificationRoute,
+	notificationSubject,
 	notificationText,
 } from './notification'
 
@@ -92,6 +93,23 @@ describe('notificationText', () => {
 	})
 })
 
+describe('notificationSubject', () => {
+	it('shows the task title as well as its identifier', () => {
+		expect(notificationSubject(notification(NOTIFICATION_NAMES.TASK_ASSIGNED, {task: TASK})))
+			.toBe('#12 Write docs')
+	})
+
+	it('shows project and team names for notifications without a task', () => {
+		expect(notificationSubject(notification(NOTIFICATION_NAMES.PROJECT_CREATED, {project: PROJECT}))).toBe('Docs')
+		expect(notificationSubject(notification(NOTIFICATION_NAMES.TEAM_MEMBER_ADDED, {team: TEAM}))).toBe('Design')
+	})
+
+	it('handles empty and unknown payloads without inventing a subject', () => {
+		expect(notificationSubject(notification('unknown', null))).toBe('')
+		expect(notificationSubject({})).toBe('')
+	})
+})
+
 describe('notificationRoute', () => {
 	it('routes every task notification to the task detail', () => {
 		const taskNames = [
@@ -111,7 +129,7 @@ describe('notificationRoute', () => {
 
 	it('routes a created project and a team membership', () => {
 		expect(notificationRoute(notification(NOTIFICATION_NAMES.PROJECT_CREATED, {project: PROJECT}))).toEqual({
-			name: 'task.index',
+			name: 'project.index',
 			params: {projectId: 4},
 		})
 		expect(notificationRoute(notification(NOTIFICATION_NAMES.TEAM_MEMBER_ADDED, {team: TEAM}))).toEqual({

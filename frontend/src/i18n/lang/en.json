@@ -1511,6 +1511,11 @@
   },
   "notification": {
     "title": "Notifications",
+    "openInbox": "Open inbox",
+    "all": "All notifications",
+    "noneUnread": "No unread notifications.",
+    "markRead": "Mark as read",
+    "loadError": "Could not load notifications.",
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
     "read": "Read",

@@ -60,6 +60,10 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
+		assert.Zero(t, u.DefaultProjectID)
+		projects, err := s.Where("owner_id = ?", u.ID).Count(&models.Project{})
+		require.NoError(t, err)
+		assert.Zero(t, projects)
 		err = s.Commit()
 		require.NoError(t, err)
 

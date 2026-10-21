@@ -1070,34 +1070,17 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	return nil
 }
 
-// CreateNewProjectForUser creates a new inbox project for a user. To prevent import cycles, we can't do that
-// directly in the user.Create function.
-func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
-	p := &Project{
-		Title: "Inbox",
-	}
-	err = p.Create(s, u)
-	if err != nil {
-		return err
-	}
-
-	if u.DefaultProjectID != 0 {
-		return err
-	}
-
-	u.DefaultProjectID = p.ID
-	_, err = s.ID(u.ID).Cols("default_project_id").Update(u)
-	return err
+// CreateNewProjectForUser is retained for plugins using the existing exported symbol.
+//
+// Deprecated: Users create their own projects; this function no longer creates an inbox.
+func CreateNewProjectForUser(_ *xorm.Session, _ *user.User) error {
+	return nil
 }
 
-// RegisterUser creates a user plus their default inbox project; shared by /register and the admin create-user route.
+// RegisterUser creates a user and their saved filters; shared by registration and admin user creation.
 func RegisterUser(s *xorm.Session, u *user.User, options ...user.CreateUserOptions) (*user.User, error) {
 	newUser, err := user.CreateUser(s, u, options...)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := CreateNewProjectForUser(s, newUser); err != nil {
 		return nil, err
 	}
 

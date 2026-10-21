@@ -123,6 +123,7 @@ watch(() => route.name as string, (routeName) => {
 		(
 			[
 				'home',
+				'notifications.index',
 				'teams.index',
 				'teams.edit',
 				'tasks.range',

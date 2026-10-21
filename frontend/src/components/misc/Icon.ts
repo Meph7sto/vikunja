@@ -46,6 +46,7 @@ import {
 	faHeader,
 	faHistory,
 	faImage,
+	faInbox,
 	faKeyboard,
 	faLayerGroup,
 	faList,
@@ -135,6 +136,7 @@ library.add(faArchive)
 library.add(faArrowLeft)
 library.add(faBars)
 library.add(faBell)
+library.add(faInbox)
 library.add(faBellSlash)
 library.add(faCalendar)
 library.add(faCalendarAlt)

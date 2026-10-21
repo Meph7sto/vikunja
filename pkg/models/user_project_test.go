@@ -17,12 +17,64 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
+
+func TestRegisterUserWithoutInboxProject(t *testing.T) {
+	originalDefault := config.DefaultSettingsDefaultProjectID.GetInt64()
+	t.Cleanup(func() { config.DefaultSettingsDefaultProjectID.Set(originalDefault) })
+
+	for _, defaultID := range []int64{0, 4} {
+		t.Run(fmt.Sprintf("default_%d", defaultID), func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			config.DefaultSettingsDefaultProjectID.Set(defaultID)
+			s := db.NewSession()
+			defer s.Close()
+
+			u, err := RegisterUser(s, &user.User{
+				Username: "without-inbox",
+				Email:    "without-inbox@example.com",
+				Password: "test-password-123",
+			})
+			require.NoError(t, err)
+			require.Equal(t, defaultID, u.DefaultProjectID)
+			projects, err := s.Where("owner_id = ?", u.ID).Count(&Project{})
+			require.NoError(t, err)
+			require.Zero(t, projects)
+			filters, err := s.Where("owner_id = ?", u.ID).Count(&SavedFilter{})
+			require.NoError(t, err)
+			require.EqualValues(t, 1, filters)
+			require.NoError(t, s.Commit())
+			db.AssertExists(t, "users", map[string]interface{}{
+				"id":                 u.ID,
+				"default_project_id": defaultID,
+			}, false)
+		})
+	}
+}
+
+func TestCreateNewProjectForUserDoesNotCreateInbox(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	before, err := s.Count(&Project{})
+	require.NoError(t, err)
+	defaultID := u.DefaultProjectID
+	require.NoError(t, CreateNewProjectForUser(s, u))
+	after, err := s.Count(&Project{})
+	require.NoError(t, err)
+	require.Equal(t, before, after)
+	require.Equal(t, defaultID, u.DefaultProjectID)
+}
 
 func TestListUsersFromProject(t *testing.T) {
 	testuser1 := &user.User{

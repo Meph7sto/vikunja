@@ -46,6 +46,22 @@
 				</XButton>
 			</p>
 		</div>
+		<div
+			v-if="needsProject"
+			class="task-add-project field"
+		>
+			<ProjectSearch
+				v-model="selectedProject"
+				:filter="project => project.id > 0 && !project.is_archived && (project.max_permission ?? 0) > 0"
+			/>
+			<XButton
+				:to="{name: 'project.create'}"
+				variant="secondary"
+				icon="plus"
+			>
+				{{ $t('menu.createProject') }}
+			</XButton>
+		</div>
 		<Expandable :open="errorMessage !== ''">
 			<p
 				v-if="errorMessage !== ''"
@@ -70,6 +86,8 @@ import type {Task as ITask} from '@/client/generated'
 
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import type {ProjectResponse} from '@/client/queries/projects'
 import {parseSubtasksViaIndention, type TaskWithParent} from '@/helpers/parseSubtasksViaIndention'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
 import {runWrites} from '@/helpers/runWrites'
@@ -98,6 +116,9 @@ const {createNewTasksBulk, findProjectId, ensureLabelsExist, isLoading: loading}
 const showLoading = useDelayedLoading(loading)
 const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
+const selectedProject = ref<ProjectResponse | null>(null)
+const routeProjectId = computed(() => Number(router.currentRoute.value.params.projectId ?? 0))
+const needsProject = computed(() => routeProjectId.value <= 0 && !authStore.settings.default_project_id)
 
 // enable only if we don't have a modal
 // onStartTyping(() => {
@@ -147,9 +168,9 @@ async function addTask() {
 	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
 	reportSkippedLabels(skipped)
 
-	let currentProjectId = authStore.settings.default_project_id
-	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
-		currentProjectId = Number(router.currentRoute.value.params.projectId)
+	let currentProjectId = needsProject.value ? selectedProject.value?.id ?? 0 : authStore.settings.default_project_id
+	if (routeProjectId.value > 0) {
+		currentProjectId = routeProjectId.value
 	}
 
 	try {
@@ -283,6 +304,19 @@ defineExpose({
 	.control {
 		flex-shrink: 0;
 		margin-block-end: 0;
+	}
+}
+
+.task-add-project {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: .75rem;
+	margin-block-start: .75rem;
+
+	.multiselect {
+		flex: 1 1 16rem;
+		min-inline-size: 0;
 	}
 }
 

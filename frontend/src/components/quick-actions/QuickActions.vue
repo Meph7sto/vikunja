@@ -49,6 +49,16 @@
 			</div>
 
 			<div
+				v-if="needsTaskProject"
+				class="quick-actions-project p-3"
+			>
+				<ProjectSearch
+					v-model="taskProject"
+					:filter="project => project.id > 0 && !project.is_archived && (project.max_permission ?? 0) > 0"
+				/>
+			</div>
+
+			<div
 				v-if="hintText !== '' && !isNewTaskCommand"
 				class="help has-text-grey-light p-2"
 			>
@@ -135,6 +145,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
@@ -146,7 +157,7 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
-import {success} from '@/message'
+import {error, success} from '@/message'
 
 import type {Task as ITask, Label} from '@/client/generated'
 import type {TaskFilterParams} from '@/client/queries/tasks'
@@ -195,6 +206,7 @@ enum SEARCH_MODE {
 
 const query = ref('')
 const selectedCmd = ref<Command | null>(null)
+const taskProject = ref<ProjectResponse | null>(null)
 
 const taskSearchParams = ref<TaskFilterParams | null>(null)
 const taskQuery = useTasks(
@@ -441,6 +453,9 @@ const isNewTaskCommand = computed(() => (
 	selectedCmd.value !== null &&
 	selectedCmd.value.type === COMMAND_TYPE.NEW_TASK
 ))
+const needsTaskProject = computed(() => isNewTaskCommand.value
+	&& (currentProject.value?.id ?? 0) <= 0
+	&& !authStore.settings.default_project_id)
 
 const taskSearchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
@@ -622,6 +637,11 @@ async function doCmd() {
 		return
 	}
 
+	if (needsTaskProject.value && !taskProject.value?.id && !parsedQuery.value.project) {
+		error({message: t('project.create.addProjectRequired')})
+		return
+	}
+
 	if (!isQuickAddMode) {
 		closeQuickActions()
 	}
@@ -629,7 +649,7 @@ async function doCmd() {
 }
 
 async function newTask() {
-	let projectId = authStore.settings.default_project_id
+	let projectId = taskProject.value?.id ?? authStore.settings.default_project_id
 	if (currentProject.value?.id && currentProject.value.id > 0) {
 		projectId = currentProject.value.id
 	}
@@ -726,6 +746,7 @@ function unselectCmd() {
 function reset() {
 	query.value = ''
 	selectedCmd.value = null
+	taskProject.value = null
 }
 
 const resultCount = computed(() => results.value.reduce((total, group) => total + group.items.length, 0))
