@@ -58,7 +58,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-create",
 		Summary:     "Create a project",
-		Description: "Creates a project; the authenticated user becomes its owner. When parent_project_id is set, the caller needs write access to that parent. Default views and a backlog bucket are created automatically.",
+		Description: "Creates a project; the authenticated user becomes its owner. When parent_project_id is set, the caller needs admin access to that parent. Default views and a backlog bucket are created automatically.",
 		Method:      http.MethodPost,
 		Path:        "/projects",
 		Tags:        tags,
@@ -67,7 +67,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-update",
 		Summary:     "Update a project",
-		Description: "Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update.",
+		Description: "Replaces a project's fields. Requires admin access. Use PATCH for a partial update.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{id}",
 		Tags:        tags,

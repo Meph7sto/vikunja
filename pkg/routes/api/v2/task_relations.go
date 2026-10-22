@@ -38,7 +38,7 @@ func RegisterTaskRelationRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-relations-create",
 		Summary:     "Create a task relation",
-		Description: "Relates two tasks. The authenticated user needs write access to the base task (in the path) and at least read access to the other task; the two tasks need not share a project. The inverse relation is created automatically (e.g. a subtask relation also stores the parenttask relation on the other task). Subtask/parenttask chains that would form a cycle are rejected.",
+		Description: "Relates two tasks. The authenticated user needs admin access to the base task (in the path) and at least read access to the other task; the two tasks need not share a project. The inverse relation is created automatically (e.g. a subtask relation also stores the parenttask relation on the other task). Subtask/parenttask chains that would form a cycle are rejected.",
 		Method:      http.MethodPost,
 		Path:        "/tasks/{task}/relations",
 		Tags:        tags,
@@ -47,7 +47,7 @@ func RegisterTaskRelationRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-relations-delete",
 		Summary:     "Delete a task relation",
-		Description: "Removes the relation identified by the base task, relation kind and other task. The automatically created inverse relation is removed as well. The authenticated user needs write access to the base task.",
+		Description: "Removes the relation identified by the base task, relation kind and other task. The automatically created inverse relation is removed as well. The authenticated user needs admin access to the base task.",
 		Method:      http.MethodDelete,
 		Path:        "/tasks/{task}/relations/{relationKind}/{otherTask}",
 		Tags:        tags,

@@ -14,6 +14,7 @@ import {
 	createTaskMutationOptions,
 	deleteTaskMutationOptions,
 	duplicateTaskMutationOptions,
+	favoriteTaskMutationOptions,
 	moveTaskMutationOptions,
 	taskWriteBody,
 	updateTaskMutationOptions,
@@ -32,6 +33,7 @@ const sdk = vi.hoisted(() => ({
 	tasksCreate: vi.fn(),
 	tasksDelete: vi.fn(),
 	tasksDuplicate: vi.fn(),
+	tasksFavoriteUpdate: vi.fn(),
 	tasksPositionUpdate: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
@@ -104,6 +106,37 @@ async function seedDefaultBucketBoards() {
 
 describe('task mutations', () => {
 	beforeEach(() => vi.resetAllMocks())
+
+	it('favorites without overwriting edits that complete during the request', async () => {
+		const client = new QueryClient()
+		const key = taskKeys.detail(1)
+		client.setQueryData(key, {
+			id: 1,
+			title: 'Before',
+			is_favorite: false,
+		})
+		sdk.tasksFavoriteUpdate.mockImplementation(async () => {
+			client.setQueryData<Task>(key, current => ({
+				...current,
+				title: 'Concurrent edit',
+			}))
+			return {data: {is_favorite: true}}
+		})
+		await client.getMutationCache().build(client, favoriteTaskMutationOptions()).execute({
+			id: 1,
+			title: 'Before',
+			is_favorite: false,
+		})
+		expect(sdk.tasksFavoriteUpdate).toHaveBeenCalledWith({
+			path: {task: 1},
+			body: {is_favorite: true},
+		})
+		expect(sdk.patchTasksRead).not.toHaveBeenCalled()
+		expect(client.getQueryData<Task>(key)).toMatchObject({
+			title: 'Concurrent edit',
+			is_favorite: true,
+		})
+	})
 
 	it('sends only writable fields and reconciles loaded detail', async () => {
 		const client = new QueryClient()

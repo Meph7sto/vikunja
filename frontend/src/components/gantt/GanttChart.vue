@@ -64,6 +64,7 @@
 										:focused-row="focusedRow ?? null"
 										:focused-cell="focusedCell"
 										:row-id="rowId"
+										:editable="canManageTask(tasks.get(Number(ganttBars[index]?.[0]?.id)))"
 										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
 										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
 										@barPointerDown="handleBarPointerDown"
@@ -94,6 +95,7 @@ import {computed, ref, watch, toRefs, nextTick, onMounted, onBeforeUnmount, onUn
 import {useRouter} from 'vue-router'
 import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
+import {useTaskPermissions} from '@/composables/useTaskPermissions'
 
 import {getHexColor} from '@/helpers/task'
 import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
@@ -134,6 +136,7 @@ const dayWidthPixels = ref(0)
 let resizeObserver: ResizeObserver | undefined
 
 const {tasks, filters} = toRefs(props)
+const {canManageTask} = useTaskPermissions()
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref<HTMLElement | null>(null)
@@ -521,6 +524,7 @@ const parentGroupBands = computed(() => {
 })
 
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
+	if (!canManageTask(tasks.value.get(Number(id)))) return
 	const task = tasks.value.get(Number(id))
 	if (!task) return
 
@@ -636,6 +640,7 @@ function clearCursor(barElement?: Element | null) {
 }
 
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
+	if (!canManageTask(tasks.value.get(Number(bar.id)))) return
 	event.preventDefault()
 	
 	isDragging.value = true
@@ -696,6 +701,7 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 }
 
 function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent) {
+	if (!canManageTask(tasks.value.get(Number(bar.id)))) return
 	event.preventDefault()
 	event.stopPropagation() // Prevent drag from triggering
 	

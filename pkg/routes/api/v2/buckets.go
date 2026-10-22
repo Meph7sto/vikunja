@@ -54,7 +54,7 @@ func RegisterBucketRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "buckets-create",
 		Summary:     "Create a bucket in a kanban view",
-		Description: "Creates a kanban bucket in the given project view. The project and view come from the URL, not the body. Requires write access to the project.",
+		Description: "Creates a kanban bucket in the given project view. The project and view come from the URL, not the body. Requires admin access to the project.",
 		Method:      http.MethodPost,
 		Path:        "/projects/{project}/views/{view}/buckets",
 		Tags:        tags,
@@ -63,7 +63,7 @@ func RegisterBucketRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "buckets-update",
 		Summary:     "Update a bucket of a kanban view",
-		Description: "Replaces a kanban bucket's title, limit and position. The bucket is identified by the URL, which also scopes it to the project and view. Requires write access to the project.",
+		Description: "Replaces a kanban bucket's title, limit and position. The bucket is identified by the URL, which also scopes it to the project and view. Requires admin access to the project.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{project}/views/{view}/buckets/{bucket}",
 		Tags:        tags,
@@ -72,7 +72,7 @@ func RegisterBucketRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "buckets-delete",
 		Summary:     "Delete a bucket of a kanban view",
-		Description: "Deletes a kanban bucket and moves its tasks to the view's default bucket; no tasks are deleted. You cannot delete the last bucket of a view (rejected with 412). Requires write access to the project.",
+		Description: "Deletes a kanban bucket and moves its tasks to the view's default bucket; no tasks are deleted. You cannot delete the last bucket of a view (rejected with 412). Requires admin access to the project.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{project}/views/{view}/buckets/{bucket}",
 		Tags:        tags,

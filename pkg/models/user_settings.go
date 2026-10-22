@@ -134,7 +134,7 @@ func checkDefaultProject(s *xorm.Session, u *user.User, projectID int64) error {
 	if err != nil {
 		return err
 	}
-	can, err := p.CanWrite(s, u)
+	can, err := p.CanManage(s, u)
 	if IsErrProjectIsArchived(err) {
 		return &ErrInvalidDefaultProject{ProjectID: projectID}
 	}

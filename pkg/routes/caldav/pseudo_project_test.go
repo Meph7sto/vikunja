@@ -335,7 +335,7 @@ func TestCollectionWritability(t *testing.T) {
 		defer s.Close()
 
 		project := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}}
-		can, err := denyArchived(project.CanWrite(s, u))
+		can, err := denyArchived(project.CanManage(s, u))
 		require.NoError(t, err)
 		return can
 	}
@@ -351,6 +351,11 @@ func TestCollectionWritability(t *testing.T) {
 
 		// Project 3 is owned by user 3 and shared read-only with user 1.
 		assert.False(t, canWrite(t, caldavOtherUser, 3))
+	})
+
+	t.Run("a submission share denies writes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		assert.False(t, canWrite(t, caldavOtherUser, 4))
 	})
 
 	t.Run("an archived project denies writes", func(t *testing.T) {

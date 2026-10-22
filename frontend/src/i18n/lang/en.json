@@ -449,7 +449,7 @@
       "retry": "Try again",
       "setBackground": "Set as project background",
       "setBackgroundBy": "Set photo by {author} as project background",
-      "noPermission": "You need write access to this project to change its background."
+      "noPermission": "You need admin access to this project to change its background."
     },
     "delete": {
       "title": "Delete \"{project}\"",

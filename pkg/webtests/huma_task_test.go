@@ -86,9 +86,9 @@ func TestHumaTask(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"title":"task #3 high prio"`)
 		})
 		t.Run("Move to another project", func(t *testing.T) {
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "4"}, `{"project_id":7}`)
+			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "4"}, `{"project_id":8}`)
 			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"project_id":7`)
+			assert.Contains(t, rec.Body.String(), `"project_id":8`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"task": "99999"}, `{"title":"x"}`)
@@ -142,9 +142,9 @@ func TestHumaTask(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Shared via team write", func(t *testing.T) {
-			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "16"})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, rec.Code)
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"task": "16"})
+			require.Error(t, err)
+			require.Equal(t, 403, getHTTPErrorCode(err))
 		})
 	})
 }
@@ -215,8 +215,7 @@ func TestHumaTask_Create(t *testing.T) {
 	})
 	t.Run("Shared via team write", func(t *testing.T) {
 		rec := create("7", `{"title":"Lorem Ipsum"}`)
-		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
+		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 	t.Run("Empty title is rejected", func(t *testing.T) {
 		rec := create("1", `{"title":""}`)

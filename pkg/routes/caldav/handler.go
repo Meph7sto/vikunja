@@ -116,7 +116,7 @@ func ProjectHandler(c *echo.Context) error {
 		s := db.NewSession()
 		defer s.Close()
 
-		canWrite, err := denyArchived(storage.project.CanWrite(s, u))
+		canWrite, err := denyArchived(storage.project.CanManage(s, u))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
 		}

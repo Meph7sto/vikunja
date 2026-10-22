@@ -74,6 +74,19 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 	return canWrite, errIsArchived
 }
 
+// CanManage requires project administration while retaining the archive checks.
+func (p *Project) CanManage(s *xorm.Session, a web.Auth) (bool, error) {
+	canWrite, err := p.CanWrite(s, a)
+	if !canWrite {
+		return false, err
+	}
+	admin, adminErr := p.IsAdmin(s, a)
+	if adminErr != nil {
+		return false, adminErr
+	}
+	return admin, err
+}
+
 // projectReadPermission holds the read access of one auth subject for one project.
 // project is nil for pseudo projects without a row of their own, so callers know not to overwrite theirs.
 type projectReadPermission struct {
@@ -245,11 +258,11 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	// permission-check-only callers (buckets, webhooks, task ops) that
 	// pass stub &Project{ID: ...} values with ParentProjectID=0 and never
 	// commit a reparent, which would spuriously trip the gate.
-	// Only a real new parent (> 0) needs a write check here; detach-to-root
+	// Only a real new parent (> 0) needs an admin check here; detach-to-root
 	// (explicit 0) is gated for Admin in UpdateProject instead.
 	if p.ParentProjectID != nil && *p.ParentProjectID > 0 && *p.ParentProjectID != ol.parentID() {
 		newProject := &Project{ID: *p.ParentProjectID}
-		can, err := newProject.CanWrite(s, a)
+		can, err := newProject.CanManage(s, a)
 		if err != nil {
 			return false, err
 		}
@@ -258,7 +271,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		}
 	}
 
-	canUpdate, err = p.CanWrite(s, a)
+	canUpdate, err = p.CanManage(s, a)
 	// Un-archiving an archived project is allowed here; whether its parent
 	// still is archived is checked in UpdateProject.
 	archivedErr := ErrProjectIsArchived{}
@@ -282,7 +295,7 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	}
 	if pid := p.parentID(); pid > 0 {
 		parent := &Project{ID: pid}
-		return parent.CanWrite(s, a)
+		return parent.CanManage(s, a)
 	}
 	// Check if we're dealing with a share auth
 	_, is := a.(*LinkSharing)

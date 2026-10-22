@@ -8,12 +8,19 @@ import type {Task as ITask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
+	tasksFavoriteUpdate: vi.fn(),
 }))
 
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 vi.mock('@/helpers/playPop', () => ({playPopSound: vi.fn()}))
-vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects: {}})}))
+vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects: {
+	1: {
+		id: 1,
+		max_permission: 2,
+		is_archived: false,
+	},
+}})}))
 vi.mock('@/composables/useCurrentProject', () => ({useCurrentProject: () => ({currentProject: {value: null}})}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
@@ -52,6 +59,7 @@ describe('SingleTaskInProject', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		sdk.patchTasksRead.mockReset()
+		sdk.tasksFavoriteUpdate.mockReset()
 	})
 
 	it('shows the row as loading while marking it undone is in flight', async () => {
@@ -72,15 +80,15 @@ describe('SingleTaskInProject', () => {
 
 	it('shows the row as loading while favouring it is in flight', async () => {
 		const favorite = deferred()
-		sdk.patchTasksRead.mockReturnValue(favorite.promise)
+		sdk.tasksFavoriteUpdate.mockReturnValue(favorite.promise)
 		const wrapper = mountRow()
 
 		await wrapper.get('.favorite').trigger('click')
 		await flushPromises()
 
-		expect(sdk.patchTasksRead).toHaveBeenCalledWith(expect.objectContaining({
+		expect(sdk.tasksFavoriteUpdate).toHaveBeenCalledWith(expect.objectContaining({
 			path: {task: 7},
-			body: [expect.objectContaining({path: '/is_favorite', value: true})],
+			body: {is_favorite: true},
 		}))
 		await vi.waitFor(() => expect(wrapper.get('.task').classes()).toContain('is-loading'))
 

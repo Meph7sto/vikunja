@@ -49,7 +49,7 @@ func (r *Reaction) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return t.CanUpdate(s, a)
+	return t.CanWrite(s, a)
 }
 
 func (r *Reaction) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
@@ -57,7 +57,7 @@ func (r *Reaction) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return t.CanUpdate(s, a)
+	return t.CanWrite(s, a)
 }
 
 func (r *Reaction) getTask(s *xorm.Session) (t *Task, err error) {

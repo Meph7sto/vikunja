@@ -59,7 +59,7 @@ func TestUserSettingsDefaultProject(t *testing.T) {
 			}{
 				{"none", 0},
 				{"own project", 1},
-				{"write share", 10},
+				{"admin share", 11},
 			} {
 				t.Run("allows "+c.name, func(t *testing.T) {
 					assert.Equal(t, http.StatusOK, set(t, c.projectID))
@@ -73,6 +73,7 @@ func TestUserSettingsDefaultProject(t *testing.T) {
 			}{
 				{"foreign project", 20},
 				{"read share", 9},
+				{"write share", 10},
 				{"nonexistent project", 9999999},
 				{"archived project", 22},
 			} {

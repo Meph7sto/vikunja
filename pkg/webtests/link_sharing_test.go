@@ -243,9 +243,9 @@ func TestLinkSharing(t *testing.T) {
 					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
-					rec, err := testHandlerProjectWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
-					require.NoError(t, err)
-					assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+					_, err := testHandlerProjectWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
+					require.Error(t, err)
+					require.Equal(t, 403, getHTTPErrorCode(err))
 				})
 				t.Run("Shared admin", func(t *testing.T) {
 					rec, err := testHandlerProjectAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"title":"TestLoremIpsum","namespace_id":2}`)
@@ -602,9 +602,9 @@ func TestLinkSharing(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"Lorem Ipsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
+				_, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"Lorem Ipsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				rec, err := testHandlerTaskAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"title":"Lorem Ipsum"}`)
@@ -619,9 +619,9 @@ func TestLinkSharing(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "13"}, `{"title":"Lorem Ipsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"Lorem Ipsum"`)
+				_, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "13"}, `{"title":"Lorem Ipsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				rec, err := testHandlerTaskAdmin.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "32"}, `{"title":"Lorem Ipsum"}`)
@@ -637,9 +637,9 @@ func TestLinkSharing(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "13"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `Successfully deleted.`)
+				_, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "13"})
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				rec, err := testHandlerTaskAdmin.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "32"})

@@ -4,13 +4,13 @@
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
-		:primary-disabled="Boolean(loadError)"
+		:primary-disabled="Boolean(loadError) || !canManage"
 		:tertiary="project.max_permission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { projectId } })"
 	>
 		<ErrorMessage v-if="loadError" />
-		<template v-else>
+		<template v-else-if="canManage">
 			<FormField
 				id="title"
 				v-model="project.title"
@@ -24,6 +24,7 @@
 			<FormField :label="$t('project.parent')">
 				<ProjectSearch
 					:model-value="parentProject"
+					:filter="candidate => candidate.max_permission === PERMISSIONS.ADMIN && !candidate.is_archived"
 					@update:modelValue="setParentProject"
 				/>
 			</FormField>
@@ -97,6 +98,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const {project, isLoaded, isLoading, error: loadError} = useProject(() => props.projectId)
 const updateProject = useUpdateProjectMutation(t('project.edit.success'))
+const canManage = computed(() => project.value.max_permission === PERMISSIONS.ADMIN)
 
 const parentProject = ref<ProjectResponse | null>(null)
 const parentProjectChanged = ref(false)
@@ -137,7 +139,7 @@ function setParentProject(parent: ProjectResponse | null) {
 useTitle(() => project.value.title ? t('project.edit.title', {project: project.value.title}) : '')
 
 async function save() {
-	if (isSaving.value || !isLoaded.value) {
+	if (isSaving.value || !isLoaded.value || !canManage.value) {
 		return
 	}
 

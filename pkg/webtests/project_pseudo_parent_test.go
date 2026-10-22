@@ -130,6 +130,7 @@ func TestProjectOmittedParentProjectIDOverHTTP(t *testing.T) {
 	token := humaTokenFor(t, &testuser1)
 
 	t.Run("omitted parent keeps the parent", func(t *testing.T) {
+		token := humaTokenFor(t, &testuser6)
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/projects/43",
 			`{"title":"renamed without a parent"}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())

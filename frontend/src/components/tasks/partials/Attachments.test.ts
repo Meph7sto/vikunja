@@ -50,7 +50,10 @@ const TaskHost = defineComponent({
 		const query = useQuery(taskQuery(1))
 		return () => query.data.value === undefined
 			? null
-			: h(Attachments, {task: query.data.value as ITask})
+			: h(Attachments, {
+				task: query.data.value as ITask,
+				canManage: true,
+			})
 	},
 })
 

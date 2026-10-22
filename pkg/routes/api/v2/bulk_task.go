@@ -37,7 +37,7 @@ func RegisterBulkTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-bulk-update",
 		Summary:     "Bulk update tasks",
-		Description: "Applies the fields named in `fields` from `values` to every task in `task_ids`. The user needs write access to every project the involved tasks belong to; if write is missing on even one, the whole request is rejected and nothing is changed. Returns the updated tasks.",
+		Description: "Applies the fields named in `fields` from `values` to every task in `task_ids`. The user needs admin access to every project the involved tasks belong to; if admin access is missing on even one, the whole request is rejected and nothing is changed. Returns the updated tasks.",
 		Method:      http.MethodPut,
 		Path:        "/tasks/bulk",
 		Tags:        tags,

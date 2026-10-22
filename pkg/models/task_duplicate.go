@@ -47,9 +47,9 @@ func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 		return canRead, err
 	}
 
-	// Need write access on the project to create tasks in it
+	// Duplicating creates a task, so it requires project administration.
 	p := &Project{ID: originalTask.ProjectID}
-	return p.CanWrite(s, a)
+	return p.CanManage(s, a)
 }
 
 // Create duplicates a task

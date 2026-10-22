@@ -30,7 +30,7 @@ const (
 	PermissionUnknown = -1
 	// Can read projects in a
 	PermissionRead Permission = iota - 1
-	// Can write in a like projects and tasks. Cannot create new projects.
+	// Can contribute comments and attachments, but cannot manage projects or tasks.
 	PermissionWrite
 	// Can manage a project, can do everything
 	PermissionAdmin

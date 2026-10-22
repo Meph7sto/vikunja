@@ -67,5 +67,5 @@ func canWriteBucketProject(s *xorm.Session, projectID int64, a web.Auth) (bool, 
 	}
 
 	p := &Project{ID: projectID}
-	return p.CanWrite(s, a)
+	return p.CanManage(s, a)
 }

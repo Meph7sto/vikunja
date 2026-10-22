@@ -33,7 +33,7 @@ func RegisterTaskBulkCreateRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-bulk-create",
 		Summary:     "Create multiple tasks",
-		Description: "Creates up to 100 tasks in the project from the URL in one atomic request: if any task is invalid, none are created and the error names the failing index. Tasks are created in payload order and land on top of every view in that order. The authenticated user needs write access to the project and becomes the creator of every task. Bucket limits are only enforced for tasks with an explicit bucket_id; tasks left to land in a view's default bucket are not counted against its limit.",
+		Description: "Creates up to 100 tasks in the project from the URL in one atomic request: if any task is invalid, none are created and the error names the failing index. Tasks are created in payload order and land on top of every view in that order. The authenticated user needs admin access to the project and becomes the creator of every task. Bucket limits are only enforced for tasks with an explicit bucket_id; tasks left to land in a view's default bucket are not counted against its limit.",
 		Method:      http.MethodPost,
 		Path:        "/projects/{project}/tasks/bulk",
 		Tags:        tags,

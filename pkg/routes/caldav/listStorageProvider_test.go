@@ -754,7 +754,7 @@ func TestPersistRelations_AuthorizesRelationUIDs(t *testing.T) {
 
 		proj = &models.Project{Title: "persist-rel shared project"}
 		require.NoError(t, proj.Create(s, owner))
-		_, err := s.Insert(&models.ProjectUser{UserID: writer.ID, ProjectID: proj.ID, Permission: models.PermissionWrite})
+		_, err := s.Insert(&models.ProjectUser{UserID: writer.ID, ProjectID: proj.ID, Permission: models.PermissionAdmin})
 		require.NoError(t, err)
 
 		taskA = &models.Task{Title: "persist-rel base", ProjectID: proj.ID, UID: "uid-persist-rel-base"}

@@ -14,6 +14,7 @@ const sdk = vi.hoisted(() => ({
 	projectsDelete: vi.fn(),
 	projectsDuplicate: vi.fn(),
 	patchProjectsRead: vi.fn(),
+	projectsFavoriteUpdate: vi.fn(),
 	subscriptionsCreate: vi.fn(),
 	subscriptionsDelete: vi.fn(),
 }))
@@ -220,7 +221,7 @@ describe('project drafts and cache mutations', () => {
 		},
 		{
 			name: 'favorite',
-			mock: sdk.patchProjectsRead,
+			mock: sdk.projectsFavoriteUpdate,
 			run: () => patchProjectFavorite(1, true),
 			response: {data: serverProject({is_favorite: true})},
 		},
@@ -574,17 +575,17 @@ describe('project drafts and cache mutations', () => {
 		})
 	})
 
-	it('patches only the favorite field', async () => {
+	it('updates only the personal favorite field', async () => {
 		const cached = serverProject({id: 1, title: 'Project', is_favorite: false})
 		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
 		queryClient.setQueryData(projectKeys.detail(1), cached)
-		sdk.patchProjectsRead.mockResolvedValue({data: {...cached, is_favorite: true}})
+		sdk.projectsFavoriteUpdate.mockResolvedValue({data: {is_favorite: true}})
 
 		await patchProjectFavorite(1, true)
 
-		expect(sdk.patchProjectsRead).toHaveBeenCalledWith({
+		expect(sdk.projectsFavoriteUpdate).toHaveBeenCalledWith({
 			path: {id: 1},
-			body: [{op: 'replace', path: '/is_favorite', value: true}],
+			body: {is_favorite: true},
 		})
 		expect(queryClient.getQueryData<Project>(projectKeys.detail(1))).toMatchObject({
 			title: 'Project',

@@ -1,5 +1,6 @@
 <template>
 	<Modal
+		:enabled="project?.max_permission === PERMISSIONS.ADMIN"
 		@close="goBack()"
 		@submit="archiveProject()"
 	>
@@ -24,6 +25,7 @@ import {useGoBack} from '@/composables/useGoBack'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
+import {PERMISSIONS} from '@/constants/permissions'
 
 defineOptions({name: 'ProjectSettingArchive'})
 
@@ -37,7 +39,7 @@ const project = computed(() => projectList.projects[Number(route.params.projectI
 useTitle(() => project.value?.title ? t('project.archive.title', {project: project.value.title}) : '')
 
 async function archiveProject() {
-	if (!project.value) {
+	if (!project.value || project.value.max_permission !== PERMISSIONS.ADMIN) {
 		return
 	}
 

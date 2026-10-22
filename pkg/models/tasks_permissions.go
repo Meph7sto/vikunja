@@ -33,9 +33,8 @@ func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate determines if a user has the permission to create a project task
 func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	// A user can do a task if he has write acces to its project
 	l := &Project{ID: t.ProjectID}
-	return l.CanWrite(s, a)
+	return l.CanManage(s, a)
 }
 
 // CanRead determines if a user can read a task
@@ -58,7 +57,12 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 
 // CanWrite checks if a user has write access to a task
 func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
-	return t.canDoTask(s, a)
+	task, err := GetTaskByIDSimple(s, t.ID)
+	if err != nil {
+		return false, err
+	}
+	project := &Project{ID: task.ProjectID}
+	return project.CanWrite(s, a)
 }
 
 // Helper function to check if a user can do stuff on a project task
@@ -72,7 +76,7 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 	// Check if we're moving the task into a different project to check if the user has sufficient permissions for that on the new project
 	if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
 		newProject := &Project{ID: t.ProjectID}
-		can, err := newProject.CanWrite(s, a)
+		can, err := newProject.CanManage(s, a)
 		if err != nil {
 			return false, err
 		}
@@ -81,7 +85,6 @@ func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 	}
 
-	// A user can do a task if it has write acces to its project
 	l := &Project{ID: ot.ProjectID}
-	return l.CanWrite(s, a)
+	return l.CanManage(s, a)
 }

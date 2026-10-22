@@ -181,8 +181,7 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 		})
 		require.NoError(t, err)
 		rec := humaRequest(t, base.e, http.MethodPost, "/api/v2/projects/2/tasks/bulk", `{"tasks":[{"title":"via link share"}]}`, token, "")
-		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"via link share"`)
+		require.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
 	})
 
 	t.Run("Link share read-only is forbidden", func(t *testing.T) {

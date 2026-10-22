@@ -41,11 +41,11 @@ import (
 // is deliberately no ReadOne (webhooks carry secrets).
 //
 // Permission gradient — Webhook.CanRead delegates to Project.CanRead (any share
-// level), while Can{Create,Update,Delete} delegate to Project.CanUpdate →
-// Project.CanWrite. The same user walks every rung by switching the parent path:
+// level), while Can{Create,Update,Delete} require Project.CanManage.
+// The same user walks every rung by switching the parent path:
 //   - project 1  (owned by testuser1): can do everything; holds fixture webhook #1
 //   - project 9  (read share):  CAN list, CANNOT create/update/delete (webhook #2)
-//   - project 10 (write share): CAN list/create/update/delete (webhook #3)
+//   - project 10 (write share): CAN list, CANNOT create/update/delete (webhook #3)
 //   - project 11 (admin share): CAN list/create/update/delete (webhook #4)
 //   - project 2  (no access, owned by user3): forbidden on everything
 func TestHumaWebhook(t *testing.T) {
@@ -164,11 +164,10 @@ func TestHumaWebhook(t *testing.T) {
 			assert.Equal(t, http.StatusCreated, rec.Code)
 			assert.Contains(t, rec.Body.String(), `"project_id":11`)
 		})
-		t.Run("Write share can create", func(t *testing.T) {
-			rec, err := writeShared.testCreateWithUser(nil, nil, `{"target_url":"https://example.com/write","events":["task.updated"]}`)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusCreated, rec.Code)
-			assert.Contains(t, rec.Body.String(), `"project_id":10`)
+		t.Run("Write share cannot create", func(t *testing.T) {
+			_, err := writeShared.testCreateWithUser(nil, nil, `{"target_url":"https://example.com/write","events":["task.updated"]}`)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Read share cannot create", func(t *testing.T) {
 			_, err := readShared.testCreateWithUser(nil, nil, `{"target_url":"https://example.com/nope","events":["task.updated"]}`)
@@ -210,13 +209,13 @@ func TestHumaWebhook(t *testing.T) {
 				"target_url must stay the fixture value; only events are mutable")
 			assert.NotContains(t, rec.Body.String(), `https://example.com/ignored`)
 		})
-		t.Run("Write share can update", func(t *testing.T) {
+		t.Run("Write share cannot update", func(t *testing.T) {
 			// Send a full body: target_url is validated before the permission
 			// check, even though the update only persists events.
-			rec, err := writeShared.testUpdateWithUser(nil, map[string]string{"webhook": "3"},
+			_, err := writeShared.testUpdateWithUser(nil, map[string]string{"webhook": "3"},
 				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, rec.Code)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Admin share can update", func(t *testing.T) {
 			rec, err := adminShared.testUpdateWithUser(nil, map[string]string{"webhook": "4"},
@@ -225,7 +224,7 @@ func TestHumaWebhook(t *testing.T) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 		})
 		t.Run("Read share cannot update", func(t *testing.T) {
-			// webhook #2 lives in project 9 (read share); CanUpdate needs write.
+			// webhook #2 lives in project 9 (read share); CanUpdate needs admin.
 			// Full valid body so the 403 comes from the permission check, not validation.
 			_, err := readShared.testUpdateWithUser(nil, map[string]string{"webhook": "2"},
 				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
@@ -262,11 +261,10 @@ func TestHumaWebhook(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
-		t.Run("Write share can delete", func(t *testing.T) {
-			rec, err := writeShared.testDeleteWithUser(nil, map[string]string{"webhook": "3"})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, rec.Code)
-			assert.Empty(t, rec.Body.String())
+		t.Run("Write share cannot delete", func(t *testing.T) {
+			_, err := writeShared.testDeleteWithUser(nil, map[string]string{"webhook": "3"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Admin share can delete", func(t *testing.T) {
 			rec, err := adminShared.testDeleteWithUser(nil, map[string]string{"webhook": "4"})

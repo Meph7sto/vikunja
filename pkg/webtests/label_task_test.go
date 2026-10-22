@@ -54,9 +54,9 @@ func TestLabelTaskBulk(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandlerBulk.testCreateWithUser(nil, map[string]string{"projecttask": "16"}, `{"labels":[{"id":1}]}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"labels"`)
+				_, err := testHandlerBulk.testCreateWithUser(nil, map[string]string{"projecttask": "16"}, `{"labels":[{"id":1}]}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				_, err := testHandlerBulk.testCreateWithUser(nil, map[string]string{"projecttask": "15"}, `{"labels":[{"id":1}]}`)

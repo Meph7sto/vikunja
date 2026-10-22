@@ -400,7 +400,7 @@ export type BulkTask = {
      */
     fields?: Array<string> | null;
     /**
-     * The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected.
+     * The ids of the tasks to update. The user needs admin access to every project these tasks belong to, or the whole request is rejected.
      */
     task_ids?: Array<number> | null;
     /**
@@ -629,6 +629,17 @@ export type ErrorDetail = {
      * The value at the given location
      */
     value?: unknown;
+};
+
+export type FavoriteState = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Whether the entity is a favorite of the authenticated user.
+     */
+    is_favorite?: boolean;
 };
 
 export type File = {
@@ -1571,7 +1582,7 @@ export type ProjectDuplicate = {
      */
     readonly duplicated_project?: Project;
     /**
-     * The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent.
+     * The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need admin access to the parent.
      */
     parent_project_id?: number;
 };
@@ -3727,7 +3738,7 @@ export type BulkTaskWritable = {
      */
     fields?: Array<string> | null;
     /**
-     * The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected.
+     * The ids of the tasks to update. The user needs admin access to every project these tasks belong to, or the whole request is rejected.
      */
     task_ids?: Array<number> | null;
     /**
@@ -3847,6 +3858,13 @@ export type DetectionResultWritable = {
 
 export type EmailConfirmWritable = {
     token?: string;
+};
+
+export type FavoriteStateWritable = {
+    /**
+     * Whether the entity is a favorite of the authenticated user.
+     */
+    is_favorite?: boolean;
 };
 
 export type HealthBodyBodyWritable = {
@@ -4281,7 +4299,7 @@ export type ProjectDuplicateWritable = {
      */
     duplicate_shares?: boolean;
     /**
-     * The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent.
+     * The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need admin access to the parent.
      */
     parent_project_id?: number;
 };
@@ -7213,6 +7231,33 @@ export type ProjectsUpdateResponses = {
 
 export type ProjectsUpdateResponse = ProjectsUpdateResponses[keyof ProjectsUpdateResponses];
 
+export type ProjectsFavoriteUpdateData = {
+    body: FavoriteStateWritable;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/projects/{id}/favorite';
+};
+
+export type ProjectsFavoriteUpdateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsFavoriteUpdateError = ProjectsFavoriteUpdateErrors[keyof ProjectsFavoriteUpdateErrors];
+
+export type ProjectsFavoriteUpdateResponses = {
+    /**
+     * OK
+     */
+    200: FavoriteState;
+};
+
+export type ProjectsFavoriteUpdateResponse = ProjectsFavoriteUpdateResponses[keyof ProjectsFavoriteUpdateResponses];
+
 export type ProjectTimeEntriesListData = {
     body?: never;
     path: {
@@ -9637,6 +9682,33 @@ export type TasksDuplicateResponses = {
 };
 
 export type TasksDuplicateResponse = TasksDuplicateResponses[keyof TasksDuplicateResponses];
+
+export type TasksFavoriteUpdateData = {
+    body: FavoriteStateWritable;
+    path: {
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/favorite';
+};
+
+export type TasksFavoriteUpdateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksFavoriteUpdateError = TasksFavoriteUpdateErrors[keyof TasksFavoriteUpdateErrors];
+
+export type TasksFavoriteUpdateResponses = {
+    /**
+     * OK
+     */
+    200: FavoriteState;
+};
+
+export type TasksFavoriteUpdateResponse = TasksFavoriteUpdateResponses[keyof TasksFavoriteUpdateResponses];
 
 export type TaskLabelsListData = {
     body?: never;

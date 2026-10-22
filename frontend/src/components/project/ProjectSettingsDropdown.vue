@@ -44,6 +44,7 @@
 
 		<template v-else-if="project.is_archived">
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
 			>
@@ -52,25 +53,28 @@
 		</template>
 		<template v-else>
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.settings.edit', params: { projectId: project.id } }"
 				icon="pen"
 			>
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
 				icon="eye"
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="backgroundsEnabled"
+				v-if="canManage && backgroundsEnabled"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
 				icon="image"
 			>
 				{{ $t('menu.setBackground') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.settings.share', params: { projectId: project.id } }"
 				icon="share-alt"
 			>
@@ -83,6 +87,7 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="canManage"
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -99,12 +104,14 @@
 				@toggle="subscribed => subscriptionMutation.mutateAsync({projectId: project.id, subscribed})"
 			/>
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.settings.webhooks', params: { projectId: project.id } }"
 				icon="bolt"
 			>
 				{{ $t('project.webhooks.title') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="canManage"
 				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
 				icon="layer-group"
 			>
@@ -152,5 +159,6 @@ const configStore = useConfigStore()
 const backgroundsEnabled = computed(() => configStore.enabled_background_providers?.length > 0)
 
 const authStore = useAuthStore()
+const canManage = computed(() => props.forceAllActions || props.project.max_permission === PERMISSIONS.ADMIN)
 const isDefaultProject = computed(() => props.project?.id === authStore.settings.default_project_id)
 </script>

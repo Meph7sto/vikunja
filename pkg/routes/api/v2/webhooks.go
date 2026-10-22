@@ -58,7 +58,7 @@ func RegisterWebhookRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "webhooks-create",
 		Summary:     "Create a webhook target in a project",
-		Description: "Creates a webhook target that receives POST requests about the subscribed events of the given project. The parent project is taken from the URL, not the body. Requires write access to the project. The secret and basic-auth credentials are write-only and not returned in the response.",
+		Description: "Creates a webhook target that receives POST requests about the subscribed events of the given project. The parent project is taken from the URL, not the body. Requires admin access to the project. The secret and basic-auth credentials are write-only and not returned in the response.",
 		Method:      http.MethodPost,
 		Path:        "/projects/{project}/webhooks",
 		Tags:        tags,
@@ -67,7 +67,7 @@ func RegisterWebhookRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "webhooks-update",
 		Summary:     "Update a webhook target's events",
-		Description: "Changes the events a webhook target subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. The webhook must belong to the project in the path, and write access to that project is required.",
+		Description: "Changes the events a webhook target subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. The webhook must belong to the project in the path, and admin access to that project is required.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{project}/webhooks/{webhook}",
 		Tags:        tags,
@@ -76,7 +76,7 @@ func RegisterWebhookRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "webhooks-delete",
 		Summary:     "Delete a webhook target",
-		Description: "Deletes a webhook target. The webhook must belong to the project in the path, and write access to that project is required.",
+		Description: "Deletes a webhook target. The webhook must belong to the project in the path, and admin access to that project is required.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{project}/webhooks/{webhook}",
 		Tags:        tags,

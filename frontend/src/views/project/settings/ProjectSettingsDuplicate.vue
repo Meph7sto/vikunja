@@ -10,7 +10,10 @@
 		<ErrorMessage v-if="loadError" />
 		<template v-else>
 			<p>{{ $t('project.duplicate.text') }}</p>
-			<ProjectSearch v-model="parentProject" />
+			<ProjectSearch
+				v-model="parentProject"
+				:filter="candidate => candidate.max_permission === PERMISSIONS.ADMIN && !candidate.is_archived"
+			/>
 			<FancyCheckbox
 				v-model="duplicateShares"
 				class="mbs-2"
@@ -28,6 +31,7 @@ import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {PERMISSIONS} from '@/constants/permissions'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
@@ -59,7 +63,7 @@ const loadingModel = computed({
 })
 watch(
 	() => projectList.projects[project.value.parent_project_id],
-	parent => parentProject.value = parent ?? null,
+	parent => parentProject.value = parent?.max_permission === PERMISSIONS.ADMIN ? parent : null,
 	{immediate: true},
 )
 

@@ -115,7 +115,7 @@
 
 			<!-- Left resize handle (hidden for endOnly bars) -->
 			<rect
-				v-if="bar.meta?.dateType !== 'endOnly'"
+				v-if="editable && bar.meta?.dateType !== 'endOnly'"
 				:x="getBarX(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -132,7 +132,7 @@
 
 			<!-- Right resize handle (hidden for startOnly bars) -->
 			<rect
-				v-if="bar.meta?.dateType !== 'startOnly'"
+				v-if="editable && bar.meta?.dateType !== 'startOnly'"
 				:x="getBarX(bar) + getBarWidth(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -219,6 +219,7 @@ import {getNaturalDayCount} from '@/helpers/time/roundToNaturalDayBoundary'
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
 const props = defineProps<{
+	editable: boolean
 	bars: GanttBarModel[]
 	totalWidth: number
 	dateFromDate: Date

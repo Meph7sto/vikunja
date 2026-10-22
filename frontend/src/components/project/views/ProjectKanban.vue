@@ -156,6 +156,8 @@
 									:model-value="bucket.tasks"
 									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 									:disabled="!canWrite"
+									filter=".task-no-manage"
+									:prevent-on-filter="false"
 									:data-bucket-index="bucketIndex"
 									tag="ul"
 									:item-key="(task: TaskResponse) => `bucket${bucket.id}-task${task.id}`"
@@ -217,10 +219,11 @@
 									<template #item="{element: task}">
 										<li
 											class="task-item"
+											:class="{'task-no-manage': !canManageTask(task)}"
 											:data-task-id="task.id"
 										>
 											<span
-												v-if="canWrite && isTouchDevice"
+												v-if="canWrite && canManageTask(task) && isTouchDevice"
 												class="handle"
 												@click="openTask(task)"
 												@touchstart.passive="onHandleTouchStart"
@@ -292,6 +295,7 @@
 
 <script setup lang="ts">
 import {useKanban} from '@/composables/useKanban'
+import {useTaskPermissions} from '@/composables/useTaskPermissions'
 import {bucketHasMore, kanbanKeys, type BucketResponse} from '@/client/queries/kanban'
 import {removeTaskFromBoard} from '@/client/queries/taskCache'
 import {useUpdateTaskPositionMutation, useMoveTaskMutation} from '@/client/queries/taskMutations'
@@ -346,6 +350,7 @@ const BucketDraggable = draggableFor<BucketResponse>()
 const TaskDraggable = draggableFor<TaskResponse>()
 
 const projectId = toRef(props, 'projectId')
+const {canManageTask} = useTaskPermissions()
 
 const DRAG_OPTIONS = {
 	// sortable options
@@ -447,7 +452,7 @@ const {currentProject: project} = useCurrentProject()
 const view = computed(() => project.value?.views.find(view => view.id === props.viewId) as ProjectView || null)
 const canWrite = computed(() =>
 	typeof project.value?.max_permission === 'number' &&
-	project.value.max_permission > Permissions.READ &&
+	project.value.max_permission >= Permissions.ADMIN &&
 	view.value?.bucket_configuration_mode === 'manual',
 )
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)

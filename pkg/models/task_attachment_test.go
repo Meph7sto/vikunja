@@ -1089,7 +1089,10 @@ func TestTaskAttachment_Permissions(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			ta := &TaskAttachment{TaskID: 1}
+			ta := &TaskAttachment{
+				ID:     1,
+				TaskID: 1,
+			}
 			can, err := ta.CanDelete(s, u)
 			require.NoError(t, err)
 			assert.True(t, can)
@@ -1099,7 +1102,13 @@ func TestTaskAttachment_Permissions(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			ta := &TaskAttachment{TaskID: 14}
+			ta := &TaskAttachment{
+				TaskID:      14,
+				FileID:      1,
+				CreatedByID: u.ID,
+			}
+			_, err := s.Insert(ta)
+			require.NoError(t, err)
 			can, err := ta.CanDelete(s, u)
 			require.NoError(t, err)
 			assert.False(t, can)
@@ -1109,7 +1118,13 @@ func TestTaskAttachment_Permissions(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			ta := &TaskAttachment{TaskID: 15}
+			ta := &TaskAttachment{
+				TaskID:      15,
+				FileID:      1,
+				CreatedByID: u.ID,
+			}
+			_, err := s.Insert(ta)
+			require.NoError(t, err)
 			can, err := ta.CanDelete(s, u)
 			require.NoError(t, err)
 			assert.False(t, can)

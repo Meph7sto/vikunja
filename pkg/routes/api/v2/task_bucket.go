@@ -29,7 +29,7 @@ import (
 // RegisterTaskBucketRoutes wires the kanban task-bucket move onto the Huma API.
 //
 // TaskBucket exposes only Update, so the handler reuses handler.DoUpdate (its
-// CanUpdate enforces write access on the bucket's project). The bucket and view
+// CanUpdate enforces admin access on the bucket's project). The bucket and view
 // come from the path; only the task id is read from the body.
 func RegisterTaskBucketRoutes(api huma.API) {
 	tags := []string{"projects"}
@@ -37,7 +37,7 @@ func RegisterTaskBucketRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-bucket-update",
 		Summary:     "Place a task in a kanban bucket",
-		Description: "Moves a task into the given bucket of a project's kanban view. Requires write access to the project. " +
+		Description: "Moves a task into the given bucket of a project's kanban view. Requires admin access to the project. " +
 			"Idempotent: re-sending the same bucket is a no-op. Side effects: moving a task into the view's done bucket marks it done (and out of it un-marks it); a repeating task moved into the done bucket is reopened and routed back to the default bucket instead. " +
 			"Moving a task into a bucket that is already at its task limit is rejected with 412. A bucket that does not resolve under the project and view in the path is rejected with 404.",
 		Method: http.MethodPut,

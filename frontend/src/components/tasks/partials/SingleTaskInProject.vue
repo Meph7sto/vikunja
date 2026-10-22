@@ -13,12 +13,12 @@
 			@keyup.enter="openTaskDetail"
 		>
 			<span
-				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+				v-tooltip="!canManageTask ? $t('task.readOnlyCheckbox') : ''"
 				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
 					:model-value="task.done ?? false"
-					:disabled="isArchived || disabled || !canMarkAsDone"
+					:disabled="isArchived || disabled || !canManageTask"
 					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
 					@click.stop
@@ -96,7 +96,8 @@
 							ref="dueDateTrigger"
 							v-tooltip="formatDateLong(task.due_date)"
 							class="dueDate"
-							@click.prevent.stop="toggle()"
+							:aria-disabled="!canManageTask || undefined"
+							@click.prevent.stop="canManageTask && toggle()"
 						>	
 							<time
 								:datetime="formatISO(task.due_date)"
@@ -109,7 +110,7 @@
 					</template>
 					<template #content="{isOpen}">
 						<DeferTask
-							v-if="isOpen"
+							v-if="isOpen && canManageTask"
 							:model-value="task"
 						/>
 					</template>
@@ -168,6 +169,7 @@
 			</RouterLink>
 
 			<BaseButton
+				v-if="canFavoriteTask"
 				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
@@ -237,6 +239,8 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useTaskPermissions} from '@/composables/useTaskPermissions'
+import {useAuthStore} from '@/stores/auth'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -286,6 +290,10 @@ const showProjectSeparately = computed(() => !props.showProject
 	&& project.value)
 
 const {currentProject} = useCurrentProject()
+const {canManageTask: mayManageTask, canContributeToTask} = useTaskPermissions()
+const canManageTask = computed(() => props.canMarkAsDone && mayManageTask(task.value))
+const authStore = useAuthStore()
+const canFavoriteTask = computed(() => canContributeToTask(task.value) && !authStore.isLinkShareAuth)
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
@@ -321,6 +329,7 @@ const isOverdue = computed(() => (
 let oldTask: ITask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
+	if (!canManageTask.value || props.isArchived || props.disabled) return
 	if (!wasReverted) oldTask = {...task.value}
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
@@ -370,8 +379,9 @@ function undoDone(checked: boolean) {
 }
 
 async function toggleFavorite() {
+	if (!canFavoriteTask.value) return
 	const updated = await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
-	emit('taskUpdated', updated)
+	emit('taskUpdated', {...task.value, is_favorite: updated.is_favorite})
 }
 
 const taskRoot = ref<HTMLElement | null>(null)

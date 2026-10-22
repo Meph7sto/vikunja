@@ -27,7 +27,10 @@
 				:label="$t('user.settings.general.defaultProject')"
 				layout="two-col"
 			>
-				<ProjectSearch v-model="defaultProject" />
+				<ProjectSearch
+					v-model="defaultProject"
+					:filter="project => project.max_permission === PERMISSIONS.ADMIN && !project.is_archived"
+				/>
 			</FormField>
 		</div>
 	</Card>
@@ -319,6 +322,7 @@ import isEqual from 'fast-deep-equal'
 import {PrefixMode} from '@/modules/quickAddMagic'
 
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {PERMISSIONS} from '@/constants/permissions'
 import Multiselect from '@/components/input/Multiselect.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import FormField from '@/components/input/FormField.vue'

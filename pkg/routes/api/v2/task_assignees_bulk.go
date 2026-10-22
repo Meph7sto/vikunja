@@ -35,7 +35,7 @@ func RegisterTaskAssigneeBulkRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-assignees-bulk",
 		Summary:     "Replace all assignees of a task",
-		Description: "Replaces the task's full assignee set with the users in the body: users not in the list are unassigned, new ones are added. Pass an empty array to unassign everyone. Each assignee must have access to the task's project, and the caller needs write access to the task.",
+		Description: "Replaces the task's full assignee set with the users in the body: users not in the list are unassigned, new ones are added. Pass an empty array to unassign everyone. Each assignee must have access to the task's project, and the caller needs admin access to the task.",
 		Method:      http.MethodPut,
 		Path:        "/tasks/{task}/assignees/bulk",
 		Tags:        tags,

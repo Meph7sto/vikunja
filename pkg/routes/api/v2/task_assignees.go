@@ -51,7 +51,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-assignees-create",
 		Summary:     "Assign a user to a task",
-		Description: "Assigns a user to the given task. The parent task is taken from the URL; the assignee is named by user_id in the body. The assignee must have access to the task's project, and the caller needs write access to the task.",
+		Description: "Assigns a user to the given task. The parent task is taken from the URL; the assignee is named by user_id in the body. The assignee must have access to the task's project, and the caller needs admin access to the task.",
 		Method:      http.MethodPost,
 		Path:        "/tasks/{task}/assignees",
 		Tags:        tags,
@@ -60,7 +60,7 @@ func RegisterTaskAssigneeRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-assignees-delete",
 		Summary:     "Remove an assignee from a task",
-		Description: "Un-assigns a user from the given task, identified by their user id in the path. Requires write access to the task.",
+		Description: "Un-assigns a user from the given task, identified by their user id in the path. Requires admin access to the task.",
 		Method:      http.MethodDelete,
 		Path:        "/tasks/{task}/assignees/{user}",
 		Tags:        tags,

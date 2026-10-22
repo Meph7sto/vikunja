@@ -156,7 +156,7 @@ const unsplashBackgroundEnabled = computed(() => configStore.enabled_background_
 const uploadBackgroundEnabled = computed(() => configStore.enabled_background_providers.includes('upload'))
 const projectId = computed(() => Number(route.params.projectId))
 const project = useQuery(computed(() => projectQuery(projectId.value)))
-const canWrite = computed(() => project.data.value !== undefined && (project.data.value.max_permission ?? 0) >= PERMISSIONS.READ_WRITE)
+const canWrite = computed(() => project.data.value !== undefined && (project.data.value.max_permission ?? 0) >= PERMISSIONS.ADMIN)
 const backgroundSearchTerm = ref('')
 const backgroundSearchInput = ref('')
 const backgroundSearchQuery = useInfiniteQuery(computed(() => ({

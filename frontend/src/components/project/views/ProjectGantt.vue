@@ -97,7 +97,7 @@ const props = defineProps<{
 const {currentProject} = useCurrentProject()
 const canWrite = computed(() =>
 	typeof currentProject.value?.max_permission === 'number' &&
-	currentProject.value.max_permission > PERMISSIONS.READ,
+	currentProject.value.max_permission >= PERMISSIONS.ADMIN,
 )
 
 const {route, projectId, viewId} = toRefs(props)

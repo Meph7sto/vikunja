@@ -151,6 +151,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjects} from '@/composables/useProjects'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {useTaskPermissions} from '@/composables/useTaskPermissions'
 
 const props = defineProps<{
 	task: TaskResponse,
@@ -170,6 +171,7 @@ const showLoading = useDelayedLoading(loadingInternal)
 const color = computed(() => getHexColor(props.task.hex_color))
 
 const projectList = useProjects()
+const {canManageTask} = useTaskPermissions()
 
 const projectTitle = computed(() => {
 	if (props.projectId === props.task.project_id) {
@@ -191,6 +193,7 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: TaskResponse) {
+	if (!canManageTask(task)) return
 	const isRecurringTask = task.repeat_after > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 	const wasBeingMarkedDone = !task.done
 	

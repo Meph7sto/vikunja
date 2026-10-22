@@ -74,20 +74,19 @@ func TestLabelTaskBulk_V2(t *testing.T) {
 			"task 1's labels must be exactly {1} after replace")
 	})
 	t.Run("Empty list clears all labels", func(t *testing.T) {
-		// task 16 (write-shared) gets a label, then an empty replace removes it.
-		_, ids, code := put("16", `{"labels":[{"id":1}]}`)
+		// task 17 (admin-shared) gets a label, then an empty replace removes it.
+		_, ids, code := put("17", `{"labels":[{"id":1}]}`)
 		assert.Equal(t, http.StatusOK, code)
 		assert.ElementsMatch(t, []int64{1}, ids)
 
-		p, ids, code := put("16", `{"labels":[]}`)
+		p, ids, code := put("17", `{"labels":[]}`)
 		require.Nil(t, p)
 		assert.Equal(t, http.StatusOK, code)
 		assert.Empty(t, ids, "empty replace must remove every label")
 	})
-	t.Run("Write share can replace", func(t *testing.T) {
-		_, ids, code := put("16", `{"labels":[{"id":1}]}`)
-		assert.Equal(t, http.StatusOK, code)
-		assert.ElementsMatch(t, []int64{1}, ids)
+	t.Run("Write share cannot replace", func(t *testing.T) {
+		_, _, code := put("16", `{"labels":[{"id":1}]}`)
+		assert.Equal(t, http.StatusForbidden, code)
 	})
 	t.Run("Read-only share is forbidden", func(t *testing.T) {
 		p, _, code := put("15", `{"labels":[{"id":1}]}`)

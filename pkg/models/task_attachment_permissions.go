@@ -29,15 +29,38 @@ func (ta *TaskAttachment) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 
 // CanDelete checks if the user can delete an attachment
 func (ta *TaskAttachment) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	t := &Task{ID: ta.TaskID}
-	return t.CanWrite(s, a)
+	stored := &TaskAttachment{}
+	query := s.ID(ta.ID)
+	if ta.TaskID != 0 {
+		query = query.Where("task_id = ?", ta.TaskID)
+	}
+	exists, err := query.Get(stored)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, ErrTaskAttachmentDoesNotExist{
+			TaskID:       ta.TaskID,
+			AttachmentID: ta.ID,
+		}
+	}
+	project, err := GetProjectSimpleByTaskID(s, stored.TaskID)
+	if err != nil {
+		return false, err
+	}
+	canWrite, err := project.CanWrite(s, a)
+	if err != nil || !canWrite {
+		return false, err
+	}
+	admin, err := project.IsAdmin(s, a)
+	if err != nil {
+		return false, err
+	}
+	return admin || stored.CreatedByID == a.GetID(), nil
 }
 
 // CanCreate checks if the user can create an attachment
 func (ta *TaskAttachment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	t, err := GetTaskByIDSimple(s, ta.TaskID)
-	if err != nil {
-		return false, err
-	}
-	return t.CanCreate(s, a)
+	t := &Task{ID: ta.TaskID}
+	return t.CanWrite(s, a)
 }

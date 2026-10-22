@@ -31,10 +31,8 @@ import (
 // /projects/{project}/views/{view}/buckets, so the harness binds the project and
 // view in basePath and idParam picks {bucket}.
 //
-// Permission model — Bucket.Can{Create,Update,Delete} all delegate to
-// Project.CanUpdate, which resolves to write access (not admin). Bucket.ReadAll
-// only needs the view's read access. So write is the boundary for mutation,
-// unlike project views where admin is required.
+// Bucket mutations require project administration. Bucket.ReadAll only needs
+// the view's read access.
 //
 // Fixture topology (see pkg/db/fixtures):
 //   - project 1 (owned by testuser1), kanban view 4: buckets 1, 2, 3.
@@ -63,7 +61,7 @@ func TestHumaBucket(t *testing.T) {
 		e:        owned.e,
 	}
 	// project 9 is shared to testuser1 read-only — enough to list, below the
-	// write bar mutation requires.
+	// admin permission mutation requires.
 	readShared := webHandlerTestV2{
 		user:     &testuser1,
 		basePath: "/api/v2/projects/9/views/36/buckets",
@@ -71,8 +69,7 @@ func TestHumaBucket(t *testing.T) {
 		t:        t,
 		e:        owned.e,
 	}
-	// project 10 is shared with write — the rung that clears Project.CanUpdate,
-	// so it can create/update/delete buckets.
+	// project 10 is shared with write, which does not allow bucket management.
 	writeShared := webHandlerTestV2{
 		user:     &testuser1,
 		basePath: "/api/v2/projects/10/views/40/buckets",
@@ -80,8 +77,7 @@ func TestHumaBucket(t *testing.T) {
 		t:        t,
 		e:        owned.e,
 	}
-	// project 11 is shared with admin — write access is a subset, so it can do
-	// everything too.
+	// project 11 is shared with admin and permits bucket management.
 	adminShared := webHandlerTestV2{
 		user:     &testuser1,
 		basePath: "/api/v2/projects/11/views/44/buckets",
@@ -132,13 +128,10 @@ func TestHumaBucket(t *testing.T) {
 			// ownership: the view from the URL wins over the body.
 			assert.Contains(t, rec.Body.String(), `"project_view_id":4`)
 		})
-		t.Run("Write share can create", func(t *testing.T) {
-			// write access clears Project.CanUpdate → Bucket.CanCreate passes.
-			rec, err := writeShared.testCreateWithUser(nil, nil, `{"title":"Write made"}`)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusCreated, rec.Code)
-			assert.Contains(t, rec.Body.String(), `"title":"Write made"`)
-			assert.Contains(t, rec.Body.String(), `"project_view_id":40`)
+		t.Run("Write share cannot create", func(t *testing.T) {
+			_, err := writeShared.testCreateWithUser(nil, nil, `{"title":"Write made"}`)
+			require.Error(t, err)
+			require.Equal(t, 403, getHTTPErrorCode(err))
 		})
 		t.Run("Admin share can create", func(t *testing.T) {
 			rec, err := adminShared.testCreateWithUser(nil, nil, `{"title":"Admin made"}`)
@@ -148,7 +141,7 @@ func TestHumaBucket(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"project_view_id":44`)
 		})
 		t.Run("Read share cannot create", func(t *testing.T) {
-			// read share is below the write bar Bucket.CanCreate enforces.
+			// Read shares do not grant administration.
 			_, err := readShared.testCreateWithUser(nil, nil, `{"title":"Nope"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -181,15 +174,14 @@ func TestHumaBucket(t *testing.T) {
 				"created_by_id":   1,
 			}, false)
 		})
-		t.Run("Write share can update", func(t *testing.T) {
+		t.Run("Write share cannot update", func(t *testing.T) {
 			// bucket 10 belongs to view 40 (project 10, write share).
-			rec, err := writeShared.testUpdateWithUser(nil, map[string]string{"bucket": "10"}, `{"title":"Write renamed"}`)
-			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"title":"Write renamed"`)
-			assert.Contains(t, rec.Body.String(), `"id":10`)
+			_, err := writeShared.testUpdateWithUser(nil, map[string]string{"bucket": "10"}, `{"title":"Write renamed"}`)
+			require.Error(t, err)
+			require.Equal(t, 403, getHTTPErrorCode(err))
 		})
 		t.Run("Read share cannot update", func(t *testing.T) {
-			// bucket 9 belongs to view 36 (project 9, read share) → needs write.
+			// bucket 9 belongs to view 36 (project 9, read share).
 			_, err := readShared.testUpdateWithUser(nil, map[string]string{"bucket": "9"}, `{"title":"x"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -209,18 +201,16 @@ func TestHumaBucket(t *testing.T) {
 
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Read share cannot delete", func(t *testing.T) {
-			// bucket 25 belongs to view 36 (project 9, read share) → needs write.
+			// bucket 25 belongs to view 36 (project 9, read share).
 			_, err := readShared.testDeleteWithUser(nil, map[string]string{"bucket": "25"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
-		t.Run("Write share can delete", func(t *testing.T) {
-			// bucket 26 belongs to view 40 (project 10, write share); view 40 still
-			// has bucket 10 (plus the one created above), so it isn't the last.
-			rec, err := writeShared.testDeleteWithUser(nil, map[string]string{"bucket": "26"})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, rec.Code)
-			assert.Empty(t, rec.Body.String())
+		t.Run("Write share cannot delete", func(t *testing.T) {
+			// bucket 26 belongs to view 40 (project 10, write share).
+			_, err := writeShared.testDeleteWithUser(nil, map[string]string{"bucket": "26"})
+			require.Error(t, err)
+			require.Equal(t, 403, getHTTPErrorCode(err))
 		})
 		t.Run("Forbidden", func(t *testing.T) {
 			_, err := forbidden.testDeleteWithUser(nil, map[string]string{"bucket": "40"})

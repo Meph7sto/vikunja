@@ -84,12 +84,12 @@ func TestHumaTaskAssigneeBulk(t *testing.T) {
 	})
 
 	t.Run("Replace adds new assignees", func(t *testing.T) {
-		// task 16 is shared to user1 with write access and starts with no
+		// task 17 is shared to user1 with admin access and starts with no
 		// assignees; user1 has project access, so it is a valid new assignee.
-		require.Empty(t, readAssignees("16", &testuser1))
-		_, err := bulkPut("16", &testuser1, `{"assignees":[{"id":1}]}`)
+		require.Empty(t, readAssignees("17", &testuser1))
+		_, err := bulkPut("17", &testuser1, `{"assignees":[{"id":1}]}`)
 		require.NoError(t, err)
-		assert.ElementsMatch(t, []int64{1}, readAssignees("16", &testuser1),
+		assert.ElementsMatch(t, []int64{1}, readAssignees("17", &testuser1),
 			"user1 must be assigned after the replace")
 	})
 

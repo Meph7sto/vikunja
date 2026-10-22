@@ -52,6 +52,8 @@
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
 						:disabled="!canDragTasks || !isPositionSorting"
+						filter=".task-no-manage"
+						:prevent-on-filter="false"
 						item-key="id"
 						tag="ul"
 						:component-data="{
@@ -75,11 +77,12 @@
 								:show-list-color="false"
 								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
+								:class="{'task-no-manage': !canManageTask(t)}"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
 							>
 								<span
-									v-if="canDragTasks && isPositionSorting"
+									v-if="canDragTasks && isPositionSorting && canManageTask(t)"
 									class="icon handle"
 								>
 									<Icon icon="grip-lines" />
@@ -101,6 +104,7 @@
 
 <script setup lang="ts">
 import {useUpdateTaskPositionMutation} from '@/client/queries/taskMutations'
+import {useTaskPermissions} from '@/composables/useTaskPermissions'
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
 import {draggableFor} from '@/components/base/Draggable'
 
@@ -162,6 +166,7 @@ const {
 const showLoading = useDelayedLoading(loading)
 
 const positionMutation = useUpdateTaskPositionMutation()
+const {canManageTask} = useTaskPermissions()
 
 const dragTasks = ref<TaskResponse[] | null>(null)
 const tasks = computed({
@@ -179,7 +184,7 @@ const {currentProject: project} = useCurrentProject()
 
 const canWrite = computed(() => {
 	return typeof project.value?.max_permission === 'number' &&
-		project.value.max_permission > Permissions.READ &&
+		project.value.max_permission >= Permissions.ADMIN &&
 		project.value.id > 0
 })
 

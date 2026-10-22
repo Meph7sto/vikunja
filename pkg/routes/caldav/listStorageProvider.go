@@ -358,7 +358,7 @@ func (vcls *VikunjaCaldavProjectStorage) canWriteCollection(s *xorm.Session) (bo
 	if vcls.project == nil {
 		return false, nil
 	}
-	return denyArchived(vcls.project.CanWrite(s, vcls.user))
+	return denyArchived(vcls.project.CanManage(s, vcls.user))
 }
 
 // GHSA-48ch-p4gq-x46x: a task addressed through a collection must belong to it. A pseudo

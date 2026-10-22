@@ -129,7 +129,7 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-delete",
 		Summary:     "Delete a task attachment",
-		Description: "Deletes one attachment and its underlying file. Requires write access to the task. The attachment must belong to the task in the path.",
+		Description: "Deletes one attachment and its underlying file. Contributors may delete only their own uploads; project admins may delete any attachment. The attachment must belong to the task in the path, and the caller must still have write access.",
 		Method:      http.MethodDelete,
 		Path:        "/tasks/{task}/attachments/{attachment}",
 		Tags:        tags,

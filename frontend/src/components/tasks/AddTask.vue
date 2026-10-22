@@ -52,7 +52,7 @@
 		>
 			<ProjectSearch
 				v-model="selectedProject"
-				:filter="project => project.id > 0 && !project.is_archived && (project.max_permission ?? 0) > 0"
+				:filter="project => project.id > 0 && !project.is_archived && project.max_permission === PERMISSIONS.ADMIN"
 			/>
 			<XButton
 				:to="{name: 'project.create'}"
@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import {PERMISSIONS} from '@/constants/permissions'
 import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import {useCreateTaskRelationMutation} from '@/client/queries/taskMutations'
 import {computed, ref} from 'vue'

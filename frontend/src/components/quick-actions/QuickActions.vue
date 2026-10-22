@@ -54,7 +54,7 @@
 			>
 				<ProjectSearch
 					v-model="taskProject"
-					:filter="project => project.id > 0 && !project.is_archived && (project.max_permission ?? 0) > 0"
+					:filter="project => project.id > 0 && !project.is_archived && project.max_permission === PERMISSIONS.ADMIN"
 				/>
 			</div>
 
@@ -130,6 +130,7 @@
 </template>
 
 <script setup lang="ts">
+import {PERMISSIONS} from '@/constants/permissions'
 import {type ComponentPublicInstance, computed, ref, watch, watchEffect, onBeforeUnmount} from 'vue'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
@@ -385,7 +386,8 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
 
 const currentProject = computed(() => {
-	if (!selectedProject.value || isSavedFilterProject(selectedProject.value)) {
+	if (!selectedProject.value || isSavedFilterProject(selectedProject.value) ||
+		selectedProject.value.max_permission !== PERMISSIONS.ADMIN || selectedProject.value.is_archived) {
 		return null
 	}
 

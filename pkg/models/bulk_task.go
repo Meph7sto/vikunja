@@ -24,7 +24,7 @@ import (
 
 // BulkTask represents a bulk task update payload.
 type BulkTask struct {
-	TaskIDs []int64  `json:"task_ids" doc:"The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected."`
+	TaskIDs []int64  `json:"task_ids" doc:"The ids of the tasks to update. The user needs admin access to every project these tasks belong to, or the whole request is rejected."`
 	Fields  []string `json:"fields" doc:"The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched. Besides the task columns, assignees, reminders and is_favorite may be named. At least one field is required."`
 	Values  *Task    `json:"values" doc:"The task carrying the values to set. Only the fields named in fields are read from it and applied to every task."`
 	Tasks   []*Task  `json:"tasks,omitempty" readOnly:"true" doc:"The updated tasks, returned in the response."`
@@ -55,7 +55,7 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	}
 	for pid := range projects {
 		p := &Project{ID: pid}
-		can, err := p.CanWrite(s, a)
+		can, err := p.CanManage(s, a)
 		if err != nil || !can {
 			return false, err
 		}
@@ -64,7 +64,7 @@ func (bt *BulkTask) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	// if tasks are moved to another project, check destination permission
 	if bt.Values != nil && bt.Values.ProjectID != 0 {
 		p := &Project{ID: bt.Values.ProjectID}
-		can, err := p.CanWrite(s, a)
+		can, err := p.CanManage(s, a)
 		if err != nil || !can {
 			return false, err
 		}

@@ -40,7 +40,7 @@ func TestTaskPositionCanUpdateValidatesView(t *testing.T) {
 
 		proj := &Project{Title: "position-validation project"}
 		require.NoError(t, proj.Create(s, owner))
-		_, err := s.Insert(&ProjectUser{UserID: writer.ID, ProjectID: proj.ID, Permission: PermissionWrite})
+		_, err := s.Insert(&ProjectUser{UserID: writer.ID, ProjectID: proj.ID, Permission: PermissionAdmin})
 		require.NoError(t, err)
 
 		task = &Task{Title: "position-validation task", ProjectID: proj.ID}

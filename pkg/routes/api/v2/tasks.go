@@ -96,7 +96,7 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-create",
 		Summary:     "Create a task",
-		Description: "Creates a task in the project from the URL. The authenticated user needs write access to that project and becomes the task's creator.",
+		Description: "Creates a task in the project from the URL. The authenticated user needs admin access to that project and becomes the task's creator.",
 		Method:      "POST",
 		Path:        "/projects/{project}/tasks",
 		Tags:        tags,
@@ -105,7 +105,7 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-update",
 		Summary:     "Update a task",
-		Description: "Replaces all of a task's fields; requires write access. Setting project_id to a different project moves the task and also requires write access to the target project. Use PATCH for a partial update.",
+		Description: "Replaces all of a task's fields; requires admin access. Setting project_id to a different project moves the task and also requires admin access to the target project. Use PATCH for a partial update.",
 		Method:      "PUT",
 		Path:        "/tasks/{task}",
 		Tags:        tags,
@@ -114,7 +114,7 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-delete",
 		Summary:     "Delete a task",
-		Description: "Deletes a task. Requires write access to its project.",
+		Description: "Deletes a task. Requires admin access to its project.",
 		Method:      "DELETE",
 		Path:        "/tasks/{task}",
 		Tags:        tags,

@@ -67,7 +67,7 @@
 			<div class="columns mbs-2">
 				<!-- Content -->
 				<div
-					:class="{'is-two-thirds': canWrite}"
+					:class="{'is-two-thirds': canContribute}"
 					class="column detail-content"
 				>
 					<div class="columns details">
@@ -353,17 +353,18 @@
 						entity-kind="tasks"
 						:entity-id="task.id"
 						class="details d-print-none"
-						:disabled="!canWrite"
+						:disabled="!canContribute"
 					/>
 
 					<!-- Attachments -->
 					<div
-						v-show="activeFields.attachments || hasAttachments"
+						v-show="canContribute || activeFields.attachments || hasAttachments"
 						class="content attachments"
 					>
 						<Attachments
 							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
-							:edit-enabled="canWrite"
+							:edit-enabled="canContribute"
+							:can-manage="canWrite"
 							:task="task"
 						/>
 					</div>
@@ -422,7 +423,7 @@
 
 					<!-- Comments -->
 					<Comments
-						:can-write="canWrite"
+						:can-write="canContribute"
 						:task-id="taskId"
 						:project-id="task.project_id"
 					/>
@@ -436,7 +437,7 @@
 				
 				<!-- Task Actions -->
 				<div
-					v-if="canWrite || isModal"
+					v-if="canContribute || isModal"
 					class="column is-one-third action-buttons d-print-none"
 				>
 					<template v-if="canWrite">
@@ -450,6 +451,8 @@
 						>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</XButton>
+					</template>
+					<template v-if="canContribute && !authStore.isLinkShareAuth">
 						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
@@ -466,7 +469,8 @@
 								task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
 						</XButton>
-						
+					</template>
+					<template v-if="canWrite">
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
@@ -611,7 +615,7 @@
 			</div>
 			<!-- Created / Updated [by] -->
 			<CreatedUpdated
-				v-if="!canWrite && !isModal"
+				v-if="!canContribute && !isModal"
 				:task="task"
 			/>
 		</div>
@@ -886,6 +890,10 @@ const projectRoute = computed(() => ({
 }))
 
 const canWrite = computed(() => (
+	(taskQuery.task.value?.max_permission ?? 0) >= PERMISSIONS.ADMIN
+))
+
+const canContribute = computed(() => (
 	(taskQuery.task.value?.max_permission ?? 0) > PERMISSIONS.READ
 ))
 
@@ -1200,11 +1208,12 @@ async function changeProject(project: ProjectResponse | null) {
 }
 
 function toggleSubscription(subscribed: boolean) {
-	if (subscriptionMutation.isPending.value) return
+	if (!canContribute.value || authStore.isLinkShareAuth || subscriptionMutation.isPending.value) return
 	subscriptionMutation.mutate({taskId: task.value.id!, subscribed})
 }
 
 async function toggleFavorite() {
+	if (!canContribute.value || authStore.isLinkShareAuth) return
 	await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
 }
 

@@ -8,6 +8,7 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import WebhookManager from '@/components/misc/WebhookManager.vue'
 import {useBaseStore} from '@/stores/base'
 import {projectQuery} from '@/client/queries/projects'
+import {PERMISSIONS} from '@/constants/permissions'
 
 defineOptions({name: 'ProjectSettingWebhooks'})
 const {t} = useI18n({useScope: 'global'})
@@ -28,7 +29,7 @@ watchEffect(() => {
 		:wide="true"
 	>
 		<WebhookManager
-			v-if="projectId > 0"
+			v-if="projectId > 0 && project?.max_permission === PERMISSIONS.ADMIN"
 			:key="projectId"
 			:scope="{kind: 'project', projectId}"
 		/>

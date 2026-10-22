@@ -41,7 +41,7 @@
 						<Icon icon="filter" />
 					</span>
 					<span
-						v-if="canEditOrder && project.id > 0 && typeof project.max_permission === 'number' && project.max_permission > PERMISSIONS.READ"
+						v-if="canEditOrder && project.id > 0 && typeof project.max_permission === 'number' && project.max_permission >= PERMISSIONS.ADMIN"
 						class="icon menu-item-icon handle drag-handle"
 						@mousedown.stop
 						@click.stop.prevent
@@ -173,7 +173,7 @@ const isDropTarget = computed(() => {
 	// The actual drop logic will handle the case when it's the same project (no-op)
 	return props.project.id > 0
 		&& typeof props.project.max_permission === 'number'
-		&& props.project.max_permission > PERMISSIONS.READ
+		&& props.project.max_permission >= PERMISSIONS.ADMIN
 })
 
 const projectList = useProjects()

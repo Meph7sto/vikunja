@@ -119,7 +119,7 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c *echo
 
 	// Check if the user has the permission to change the project background
 	project = &models.Project{ID: projectID}
-	can, err := project.CanWrite(s, auth)
+	can, err := project.CanManage(s, auth)
 	if err != nil {
 		return
 	}
@@ -350,7 +350,7 @@ func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (p
 	}
 
 	project = &models.Project{ID: projectID}
-	can, err := project.CanWrite(s, auth)
+	can, err := project.CanManage(s, auth)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, auth, err

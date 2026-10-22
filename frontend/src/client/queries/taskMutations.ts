@@ -6,6 +6,7 @@ import {
 	tasksBulkCreate,
 	tasksDuplicate,
 	tasksMarkRead,
+	tasksFavoriteUpdate,
 	taskAssigneesCreate,
 	taskAssigneesDelete,
 	taskLabelsCreate,
@@ -255,10 +256,13 @@ export function duplicateTaskMutationOptions() {
 
 export function favoriteTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => (await patchTasksRead({
-			path: {task: task.id},
-			body: taskPatchBody({is_favorite: !task.is_favorite}),
-		})).data,
+		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => {
+			const {data} = await tasksFavoriteUpdate({
+				path: {task: task.id},
+				body: {is_favorite: !task.is_favorite},
+			})
+			return {is_favorite: data.is_favorite ?? false}
+		},
 		optimistic: {
 			queryKeys: ({id}, client) => taskQueryKeys(client, id),
 			update: (task, client) => mapTaskEverywhere(client, task.id, current => ({
@@ -266,7 +270,10 @@ export function favoriteTaskMutationOptions() {
 				is_favorite: !task.is_favorite,
 			})),
 		},
-		onSuccess: (task, _input, client) => replaceTaskEverywhere(client, task),
+		onSuccess: (favorite, {id}, client) => mapTaskEverywhere(client, id, current => ({
+			...current,
+			is_favorite: favorite.is_favorite,
+		})),
 		onSettled: async ({id}, client) => {
 			await invalidateTaskMembership(client, id)
 			await client.invalidateQueries({queryKey: projectKeys.list()})

@@ -50,7 +50,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-background-delete",
 		Summary:     "Remove a project background",
-		Description: "Removes a project's background, whichever provider set it. Succeeds even when the project has no background. Requires write access to the project. Returns the updated project.",
+		Description: "Removes a project's background, whichever provider set it. Succeeds even when the project has no background. Requires admin access to the project. Returns the updated project.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{project}/background",
 		// Return the updated project with 200, not the wrapper's DELETE default 204.
@@ -82,7 +82,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 		Register(api, withUploadLimits(huma.Operation{
 			OperationID: "projects-background-upload",
 			Summary:     "Upload a project background",
-			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.",
+			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires admin access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.",
 			Method:      http.MethodPut,
 			Path:        "/projects/{project}/backgrounds/upload",
 			// Return the updated project with 200, the natural code for an idempotent PUT.
@@ -104,7 +104,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 		Register(api, huma.Operation{
 			OperationID: "projects-background-unsplash-set",
 			Summary:     "Set an Unsplash image as project background",
-			Description: "Sets a previously searched Unsplash image as the project's background, identified by the image id from the search results. Requires write access to the project.",
+			Description: "Sets a previously searched Unsplash image as the project's background, identified by the image id from the search results. Requires admin access to the project.",
 			Method:      http.MethodPut,
 			Path:        "/projects/{project}/backgrounds/unsplash",
 			Tags:        tags,
@@ -191,7 +191,7 @@ func backgroundUnsplashSet(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanWrite(s, a)
+	can, err := project.CanManage(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -247,7 +247,7 @@ func backgroundUpload(ctx context.Context, in *backgroundUploadInput) (*singleBo
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanWrite(s, a)
+	can, err := project.CanManage(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -378,7 +378,7 @@ func backgroundRemove(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanWrite(s, a)
+	can, err := project.CanManage(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

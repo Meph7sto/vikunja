@@ -7,7 +7,7 @@ import {
 	projectsList,
 	projectsRead,
 	projectsUpdate,
-	patchProjectsRead,
+	projectsFavoriteUpdate,
 } from '@/client/generated'
 import type {
 	Project,
@@ -348,11 +348,11 @@ export function updateProjectMutationOptions(successMessage?: string) {
 export function patchProjectFavoriteMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id, isFavorite}: {id: number; isFavorite: boolean}) => {
-			const {data} = await patchProjectsRead({
+			const {data} = await projectsFavoriteUpdate({
 				path: {id},
-				body: [{op: 'replace', path: '/is_favorite', value: isFavorite}],
+				body: {is_favorite: isFavorite},
 			})
-			return normalizeProject(data)
+			return {is_favorite: data.is_favorite ?? false}
 		},
 		optimistic: {
 			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],

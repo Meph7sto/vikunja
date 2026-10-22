@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 	"testing"
 
@@ -244,7 +245,7 @@ func TestProject(t *testing.T) {
 			// detaches the child to the top level, which must require Admin.
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "43"}, `{"title":"Reparent Escalation Test Child","parent_project_id":0}`)
 			require.Error(t, err)
-			assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -259,9 +260,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "7"}, `{"title":"TestLoremIpsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "7"}, `{"title":"TestLoremIpsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "8"}, `{"title":"TestLoremIpsum"}`)
@@ -275,9 +276,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "10"}, `{"title":"TestLoremIpsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "10"}, `{"title":"TestLoremIpsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "11"}, `{"title":"TestLoremIpsum"}`)
@@ -291,9 +292,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "13"}, `{"title":"TestLoremIpsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "13"}, `{"title":"TestLoremIpsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "14"}, `{"title":"TestLoremIpsum"}`)
@@ -307,9 +308,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "16"}, `{"title":"TestLoremIpsum"}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "16"}, `{"title":"TestLoremIpsum"}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "17"}, `{"title":"TestLoremIpsum"}`)
@@ -449,12 +450,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":33}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
-				assert.Contains(t, rec.Body.String(), `"description":""`)
-				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.NotContains(t, rec.Body.String(), `"tasks":`)
+				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":33}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":34}`)
@@ -471,12 +469,9 @@ func TestProject(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
-				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":10}`)
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"title":"Lorem"`)
-				assert.Contains(t, rec.Body.String(), `"description":""`)
-				assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
-				assert.NotContains(t, rec.Body.String(), `"tasks":`)
+				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":10}`)
+				require.Error(t, err)
+				require.Equal(t, 403, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{"namespace": "12"}, `{"title":"Lorem","parent_project_id":11}`)

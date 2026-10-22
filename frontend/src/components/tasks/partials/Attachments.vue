@@ -95,7 +95,7 @@
 							<Icon icon="copy" />
 						</BaseButton>
 						<BaseButton
-							v-if="editEnabled"
+							v-if="canDeleteAttachment(a)"
 							v-tooltip="$t('task.attachment.deleteTooltip')"
 							:aria-label="$t('task.attachment.deleteTooltip')"
 							class="attachment-info-meta-button"
@@ -104,7 +104,7 @@
 							<Icon icon="trash-alt" />
 						</BaseButton>
 						<BaseButton
-							v-if="editEnabled && canPreviewImage(a)"
+							v-if="canManage && canPreviewImage(a)"
 							v-tooltip="task.cover_image_attachment_id === a.id
 								? $t('task.attachment.unsetAsCover')
 								: $t('task.attachment.setAsCover')"
@@ -253,15 +253,30 @@ import {useI18n} from 'vue-i18n'
 import FilePreview from '@/components/tasks/partials/FilePreview.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 import AudioPreview from '@/components/tasks/partials/AudioPreview.vue'
+import {useAuthStore} from '@/stores/auth'
 
 type AudioPreviewInstance = InstanceType<typeof AudioPreview>
 
 const props = withDefaults(defineProps<{
 	task: ITask,
 	editEnabled?: boolean,
+	canManage?: boolean,
 }>(), {
 	editEnabled: true,
+	canManage: false,
 })
+
+const authStore = useAuthStore()
+const uploaderId = computed(() => authStore.info?.id === undefined
+	? undefined
+	: authStore.info.id * (authStore.isLinkShareAuth ? -1 : 1))
+
+function canDeleteAttachment(attachment: IAttachment): boolean {
+	return props.editEnabled && (props.canManage || (
+		attachment.created_by?.id !== undefined &&
+		attachment.created_by.id === uploaderId.value
+	))
+}
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
 
@@ -445,7 +460,7 @@ async function uploadNewAttachment() {
 }
 
 async function uploadFilesToTask(files: File[] | FileList) {
-	if (loading.value) {
+	if (!props.editEnabled || loading.value) {
 		return
 	}
 
@@ -475,11 +490,12 @@ async function uploadFilesToTask(files: File[] | FileList) {
 const attachmentToDelete = ref<IAttachment | null>(null)
 
 function setAttachmentToDelete(attachment: IAttachment | null) {
+	if (attachment !== null && !canDeleteAttachment(attachment)) return
 	attachmentToDelete.value = attachment
 }
 
 async function deleteAttachment() {
-	if (attachmentToDelete.value === null) {
+	if (attachmentToDelete.value === null || !canDeleteAttachment(attachmentToDelete.value)) {
 		return
 	}
 
@@ -606,6 +622,7 @@ function copyUrl(attachment: IAttachment) {
 }
 
 async function setCoverImage(attachment: IAttachment | null) {
+	if (!props.canManage) return
 	await updateTask.mutateAsync({...props.task, id: props.task.id!, cover_image_attachment_id: attachment?.id ?? 0})
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }

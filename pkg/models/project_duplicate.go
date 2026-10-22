@@ -33,7 +33,7 @@ type ProjectDuplicate struct {
 	// The project id of the project to duplicate
 	ProjectID int64 `json:"-" param:"projectid"`
 	// The target parent project
-	ParentProjectID int64 `json:"parent_project_id,omitempty" doc:"The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent."`
+	ParentProjectID int64 `json:"parent_project_id,omitempty" doc:"The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need admin access to the parent."`
 	// Whether to copy the project's shares to the duplicate
 	DuplicateShares bool `json:"duplicate_shares,omitempty" doc:"Whether to copy the project's user, team and link shares to the duplicate. Defaults to false."`
 
@@ -57,15 +57,14 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 		return canRead, err
 	}
 
-	// Placing the copy under a parent requires write access to that parent.
-	// CanWrite hydrates the project, unlike CanCreate on the bare struct.
+	// Placing the copy under a parent requires admin access to that parent.
 	parent := &Project{ID: pd.ParentProjectID}
-	return parent.CanWrite(s, a)
+	return parent.CanManage(s, a)
 }
 
 // Create duplicates a project
 // @Summary Duplicate an existing project
-// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and admin access in the parent of the new project.
 // @tags project
 // @Accept json
 // @Produce json

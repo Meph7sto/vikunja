@@ -126,9 +126,9 @@ func TestLabelTask(t *testing.T) {
 		})
 		t.Run("Write share can attach", func(t *testing.T) {
 			// task 16 is write-shared; user1 has access to label #1.
-			rec, err := writeShared.testCreateWithUser(nil, nil, `{"label_id":1}`)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusCreated, rec.Code)
+			_, err := writeShared.testCreateWithUser(nil, nil, `{"label_id":1}`)
+			require.Error(t, err)
+			require.Equal(t, 403, getHTTPErrorCode(err))
 		})
 		t.Run("Inherited child-project access can attach", func(t *testing.T) {
 			// Task 26 and label #10 are reachable only through team 1's shares

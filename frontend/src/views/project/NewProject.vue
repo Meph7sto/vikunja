@@ -22,7 +22,10 @@
 			v-if="projectList.hasProjects"
 			:label="$t('project.parent')"
 		>
-			<ProjectSearch v-model="parentProject" />
+			<ProjectSearch
+				v-model="parentProject"
+				:filter="candidate => candidate.max_permission === PERMISSIONS.ADMIN && !candidate.is_archived"
+			/>
 		</FormField>
 		<FormField :label="$t('project.color')">
 			<ColorPicker v-model="project.hex_color" />
@@ -43,6 +46,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useProjects} from '@/composables/useProjects'
 import {useGoBack} from '@/composables/useGoBack'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {PERMISSIONS} from '@/constants/permissions'
 import {createProjectDraft, useCreateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
 const props = defineProps<{

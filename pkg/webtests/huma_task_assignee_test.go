@@ -154,10 +154,8 @@ func TestHumaTaskAssignee(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 
-		// Permission matrix: CREATE requires write access to the task, so
-		// read-only shares are forbidden while write/admin shares are allowed.
+		// Permission matrix: assigning tasks requires project administration.
 		// user1 has access to all these projects, so it can be the assignee.
-		// Mirrors the v1 archived/permission behaviour and the comment CREATE matrix.
 		t.Run("Permissions check", func(t *testing.T) {
 			// task 34 is owned by user13 — user1 has no access at all.
 			t.Run("Forbidden no access", func(t *testing.T) {
@@ -166,8 +164,12 @@ func TestHumaTaskAssignee(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 
-			// Read-only shares: create forbidden.
+			// Read-only and submission shares cannot assign tasks.
 			forbiddenCreate := map[string]string{
+				"Shared Via Team write":                   "16",
+				"Shared Via User write":                   "19",
+				"Shared Via Parent Project Team write":    "22",
+				"Shared Via Parent Project User write":    "25",
 				"Shared Via Team readonly":                "15",
 				"Shared Via User readonly":                "18",
 				"Shared Via Parent Project Team readonly": "21",
@@ -181,15 +183,11 @@ func TestHumaTaskAssignee(t *testing.T) {
 				})
 			}
 
-			// Write/admin shares: create allowed (8 positive cases).
+			// Only admin shares may assign tasks.
 			allowedCreate := map[string]string{
-				"Shared Via Team write":                "16",
 				"Shared Via Team admin":                "17",
-				"Shared Via User write":                "19",
 				"Shared Via User admin":                "20",
-				"Shared Via Parent Project Team write": "22",
 				"Shared Via Parent Project Team admin": "23",
-				"Shared Via Parent Project User write": "25",
 				"Shared Via Parent Project User admin": "26",
 			}
 			for name, taskID := range allowedCreate {
@@ -225,9 +223,7 @@ func TestHumaTaskAssignee(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 
-		// Permission matrix: DELETE requires write access to the task, same as
-		// create. Read-only shares 403 before touching the row; write/admin
-		// succeed (the row need not exist — v1 delete is permissive).
+		// Unassigning also requires administration; the assignment need not exist.
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden no access", func(t *testing.T) {
 				_, err := onTaskAs("34", &testuser1).testDeleteWithUser(nil, map[string]string{"user": "1"})
@@ -236,6 +232,10 @@ func TestHumaTaskAssignee(t *testing.T) {
 			})
 
 			forbiddenDelete := map[string]string{
+				"Shared Via Team write":                   "16",
+				"Shared Via User write":                   "19",
+				"Shared Via Parent Project Team write":    "22",
+				"Shared Via Parent Project User write":    "25",
 				"Shared Via Team readonly":                "15",
 				"Shared Via User readonly":                "18",
 				"Shared Via Parent Project Team readonly": "21",
@@ -250,13 +250,9 @@ func TestHumaTaskAssignee(t *testing.T) {
 			}
 
 			allowedDelete := map[string]string{
-				"Shared Via Team write":                "16",
 				"Shared Via Team admin":                "17",
-				"Shared Via User write":                "19",
 				"Shared Via User admin":                "20",
-				"Shared Via Parent Project Team write": "22",
 				"Shared Via Parent Project Team admin": "23",
-				"Shared Via Parent Project User write": "25",
 				"Shared Via Parent Project User admin": "26",
 			}
 			for name, taskID := range allowedDelete {

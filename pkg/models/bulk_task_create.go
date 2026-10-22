@@ -37,7 +37,7 @@ type BulkTaskCreation struct {
 // CanCreate checks if a user may create tasks in the project — one write check covers the whole batch since all tasks land in the same project.
 func (btc *BulkTaskCreation) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	p := &Project{ID: btc.ProjectID}
-	return p.CanWrite(s, a)
+	return p.CanManage(s, a)
 }
 
 // Create creates all tasks of the batch in one transaction — an invalid task rolls back everything and the error names its index.
